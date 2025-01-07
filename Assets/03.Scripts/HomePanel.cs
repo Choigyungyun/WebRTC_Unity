@@ -18,7 +18,7 @@ namespace MultiPartyWebRTC
 
         private void Awake()
         {
-            versionText.text = Application.version;
+            versionText.text = Application.version + "v";
         }
 
         private void Start()
