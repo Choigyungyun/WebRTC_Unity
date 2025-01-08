@@ -11,8 +11,6 @@ namespace MultiPartyWebRTC
         [SerializeField] private GameObject settingPanel;
         [SerializeField] private GameObject videoRoomPanel;
 
-        private WebSocketHandler webSocketHandler;
-
         private Stack<GameObject> panelStack = new();
 
         private void OnEnable()
@@ -31,11 +29,6 @@ namespace MultiPartyWebRTC
 
             UIEvent.BackSettingEvent -= HideSettingPanel;
             UIEvent.ApplySettingEvent -= ApplySetting;
-        }
-
-        private void Awake()
-        {
-            webSocketHandler = new WebSocketHandler();
         }
 
         private void Start()

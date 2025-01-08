@@ -14,10 +14,12 @@ namespace MultiPartyWebRTC
         [Header("Input Fields")]
         [SerializeField] private TMP_InputField addressInputField;
         [SerializeField] private TMP_InputField portInputField;
+        [SerializeField] private TMP_InputField nickNameInputField;
 
         [Header("Texts")]
-        [SerializeField] private TMP_Text currentAddressText;
-        [SerializeField] private TMP_Text currentPortText;
+        [SerializeField] private TMP_Text currentURLText;
+        [SerializeField] private TMP_Text currentProtocolText;
+        [SerializeField] private TMP_Text currentNickNameText;
 
         private void Awake()
         {
@@ -26,6 +28,9 @@ namespace MultiPartyWebRTC
 
         private void OnEnable()
         {
+            // DataEvent
+            DataEvent.SetDefaultWebSocketEvent += SetDefaultWebSocket;
+
             // Buttons
             backSettingButton.onClick.AddListener(OnClickBackSetting);
             applySettingButton.onClick.AddListener(OnClickApplySetting);
@@ -33,10 +38,14 @@ namespace MultiPartyWebRTC
             // Inputs
             addressInputField.onValueChanged.AddListener(CheckInputValueChanaged);
             portInputField.onValueChanged.AddListener(CheckInputValueChanaged);
+            nickNameInputField.onValueChanged.AddListener(CheckInputValueChanaged);
         }
 
         private void OnDisable()
         {
+            // DataEvent
+            DataEvent.SetDefaultWebSocketEvent -= SetDefaultWebSocket;
+
             // Buttons
             backSettingButton.onClick.RemoveListener(OnClickBackSetting);
             applySettingButton.onClick.RemoveListener(OnClickApplySetting);
@@ -44,9 +53,19 @@ namespace MultiPartyWebRTC
             // Inputs
             addressInputField.onValueChanged.RemoveListener(CheckInputValueChanaged);
             portInputField.onValueChanged.RemoveListener(CheckInputValueChanaged);
+            nickNameInputField.onValueChanged.RemoveListener(CheckInputValueChanaged);
         }
 
-        #region 버튼 클릭 이벤트
+        #region Data 이벤트 함수
+        private void SetDefaultWebSocket(string url, string protocol, string name)
+        {
+            currentURLText.text = url;
+            currentProtocolText.text = protocol;
+            currentNickNameText.text = name;
+        }
+        #endregion
+
+        #region 버튼 클릭 이벤트 함수
         private void InitSettingPanel()
         {
             applySettingButton.interactable = false;
@@ -61,8 +80,8 @@ namespace MultiPartyWebRTC
 
         private void OnClickApplySetting()
         {
-            currentAddressText.text = addressInputField.text;
-            currentPortText.text = portInputField.text;
+            currentURLText.text = addressInputField.text;
+            currentProtocolText.text = portInputField.text;
 
             ClearAllFieldText();
 
@@ -70,7 +89,7 @@ namespace MultiPartyWebRTC
         }
         #endregion
 
-        #region 인풋 이벤트
+        #region 인풋 이벤트 함수
         private void CheckInputValueChanaged(string value)
         {
             UpdateApplyButtonState(!string.IsNullOrEmpty(value));
@@ -91,6 +110,7 @@ namespace MultiPartyWebRTC
         {
             addressInputField.text = string.Empty;
             portInputField.text = string.Empty;
+            nickNameInputField.text = string.Empty;
         }
     }
 }

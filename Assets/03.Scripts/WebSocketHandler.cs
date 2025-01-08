@@ -1,6 +1,9 @@
+using MultiPartyWebRTC.Event;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using UnityEditor.Timeline.Actions;
 using UnityEngine;
 using WebSocketSharp;
 
@@ -23,54 +26,106 @@ namespace MultiPartyWebRTC
         /// Janus의 기본 WebSocket Protocol은 <c>"janus-protocol"</c>입니다.
         /// </remarks>
         private readonly string Default_Protocol = "janus-protocol";
+        private readonly string Default_NickName = "User";
 
         public string WebSocketURL { get { return socketURL; } set { socketURL = value; } }
         public string WebSocketProtocol { get { return socketProtocol; } set { socketProtocol = value; } }
+        public string NickName { get { return nickName; } set { nickName = value; } }
 
         private string socketURL = string.Empty;
         private string socketProtocol = string.Empty;
+        private string nickName = string.Empty;
 
         private ConcurrentQueue<string> messageDefendQueue = new();
         
         private WebSocket webSocket;
-
-        public WebSocketHandler()
+        
+        public void SetDefaultWebSocket()
         {
-            
+            socketURL = Default_URL;
+            socketProtocol = Default_Protocol;
+            nickName = Default_NickName;
+        }
+
+        public void UpdateWebSocketSetting() => DataEvent.SetDefaultWebSocketEvent?.Invoke(socketURL, socketProtocol, nickName);
+
+        public void ConnectWebSocket()
+        {
+            InitWebSocket(socketURL, socketProtocol);
+            AttachWebSocketHandlers();
+        }
+
+        public void DisconnectWebSocket()
+        {
+            webSocket.Close();
+            DetachWebSocketHandlers();
         }
 
         private void InitWebSocket(string url, string protocol)
         {
-            webSocket = new WebSocket(url, protocol);
+            if(webSocket != null)
+            {
+                Debug.Log("This is a WebSocket that has already been created.");
+                return;
+            }
 
+            webSocket = new WebSocket(url, protocol);
             webSocket.Connect();
             Debug.Log("WebSocket Message : WebSocket Connect - " + webSocket.IsAlive);
+        }
 
-            // WebSocket 열렸을 때
-            webSocket.OnOpen += (sender, e) =>
-            {
-                Debug.Log("Socket Opend");
-            };
 
-            // WebSocket 메세지 이벤트가 발생할 때
-            webSocket.OnMessage += (sender, e) =>
-            {
-                Debug.Log("WebSocket Message: \n" + e.Data);
+        #region WebScoket 이벤트
+        private void AttachWebSocketHandlers()
+        {
+            webSocket.OnMessage += WebSocketOnOpen;
+            webSocket.OnMessage += WebSocketOnMessage;
+            webSocket.OnError += WebSocketOnError;
+            webSocket.OnClose += WebSocketOnClose;
 
-                messageDefendQueue.Enqueue(e.Data);
-            };
+            Debug.Log($"Attach WebSocket events.");
+        }
 
-            // WebSocket 에러가 발생할 때
-            webSocket.OnError += (sender, e) =>
-            {
-                Debug.LogError("WebSocket Error: \n" + e.Message);
-            };
+        private void DetachWebSocketHandlers()
+        {
+            webSocket.OnOpen -= WebSocketOnOpen;
+            webSocket.OnMessage -= WebSocketOnMessage;
+            webSocket.OnError -= WebSocketOnError;
+            webSocket.OnClose -= WebSocketOnClose;
 
-            // WebSocket 닫혔을 때
-            webSocket.OnClose += (sender, e) =>
-            {
-                Debug.Log("WebSocket Close");
-            };
+            Debug.Log($"Detach WebSocket events.");
+        }
+
+        private void WebSocketOnOpen(object sender, EventArgs e)
+        {
+            Debug.Log("Socket Opend");
+        }
+
+        private void WebSocketOnMessage(object sender, MessageEventArgs e)
+        {
+            Debug.Log("WebSocket Message: \n" + e.Data);
+
+            messageDefendQueue.Enqueue(e.Data);
+        }
+
+        private void WebSocketOnError(object sender, ErrorEventArgs e)
+        {
+            Debug.LogError("WebSocket Error: \n" + e.Message);
+        }
+
+        private void WebSocketOnClose(object sender, CloseEventArgs e)
+        {
+            Debug.Log("WebSocket Close");
+        }
+        #endregion
+
+        private void ClearAllWebSocket()
+        {
+            webSocket.Close();
+
+            DetachWebSocketHandlers();
+
+            webSocket = null;
         }
     }
 }
