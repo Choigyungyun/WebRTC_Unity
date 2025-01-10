@@ -26,15 +26,15 @@ namespace MultiPartyWebRTC
         /// Janus의 기본 WebSocket Protocol은 <c>"janus-protocol"</c>입니다.
         /// </remarks>
         private readonly string Default_Protocol = "janus-protocol";
-        private readonly string Default_NickName = "User";
+        private readonly string Default_Nickname = "User";
 
         public string WebSocketURL { get { return socketURL; } set { socketURL = value; } }
         public string WebSocketProtocol { get { return socketProtocol; } set { socketProtocol = value; } }
-        public string NickName { get { return nickName; } set { nickName = value; } }
+        public string Nickname { get { return nickname; } set { nickname = value; } }
 
         private string socketURL = string.Empty;
         private string socketProtocol = string.Empty;
-        private string nickName = string.Empty;
+        private string nickname = string.Empty;
 
         private ConcurrentQueue<string> messageDefendQueue = new();
         
@@ -44,10 +44,10 @@ namespace MultiPartyWebRTC
         {
             socketURL = Default_URL;
             socketProtocol = Default_Protocol;
-            nickName = Default_NickName;
+            nickname = Default_Nickname;
         }
 
-        public void UpdateWebSocketSetting() => DataEvent.SetDefaultWebSocketEvent?.Invoke(socketURL, socketProtocol, nickName);
+        public void UpdateWebSocketSetting() => DataEvent.SetDefaultWebSocketEvent?.Invoke(socketURL, socketProtocol, nickname);
 
         public void ConnectWebSocket()
         {
@@ -57,8 +57,26 @@ namespace MultiPartyWebRTC
 
         public void DisconnectWebSocket()
         {
+            if(webSocket == null)
+            {
+                return;
+            }
             webSocket.Close();
             DetachWebSocketHandlers();
+        }
+
+        public bool IsNullWebSocket()
+        {
+            return webSocket == null;
+        }
+
+        public void ClearAllWebSocket()
+        {
+            webSocket.Close();
+
+            DetachWebSocketHandlers();
+
+            webSocket = null;
         }
 
         private void InitWebSocket(string url, string protocol)
@@ -118,14 +136,5 @@ namespace MultiPartyWebRTC
             Debug.Log("WebSocket Close");
         }
         #endregion
-
-        private void ClearAllWebSocket()
-        {
-            webSocket.Close();
-
-            DetachWebSocketHandlers();
-
-            webSocket = null;
-        }
     }
 }

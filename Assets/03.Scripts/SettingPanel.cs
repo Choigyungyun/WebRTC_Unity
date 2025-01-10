@@ -12,14 +12,14 @@ namespace MultiPartyWebRTC
         [SerializeField] private Button applySettingButton;
 
         [Header("Input Fields")]
-        [SerializeField] private TMP_InputField addressInputField;
-        [SerializeField] private TMP_InputField portInputField;
-        [SerializeField] private TMP_InputField nickNameInputField;
+        [SerializeField] private TMP_InputField urlInputField;
+        [SerializeField] private TMP_InputField ProtocolInputField;
+        [SerializeField] private TMP_InputField nicknameInputField;
 
         [Header("Texts")]
         [SerializeField] private TMP_Text currentURLText;
         [SerializeField] private TMP_Text currentProtocolText;
-        [SerializeField] private TMP_Text currentNickNameText;
+        [SerializeField] private TMP_Text currentNicknameText;
 
         private void Awake()
         {
@@ -36,9 +36,9 @@ namespace MultiPartyWebRTC
             applySettingButton.onClick.AddListener(OnClickApplySetting);
 
             // Inputs
-            addressInputField.onValueChanged.AddListener(CheckInputValueChanaged);
-            portInputField.onValueChanged.AddListener(CheckInputValueChanaged);
-            nickNameInputField.onValueChanged.AddListener(CheckInputValueChanaged);
+            urlInputField.onValueChanged.AddListener(HandleInputValueChanaged);
+            ProtocolInputField.onValueChanged.AddListener(HandleInputValueChanaged);
+            nicknameInputField.onValueChanged.AddListener(HandleInputValueChanaged);
         }
 
         private void OnDisable()
@@ -51,9 +51,9 @@ namespace MultiPartyWebRTC
             applySettingButton.onClick.RemoveListener(OnClickApplySetting);
 
             // Inputs
-            addressInputField.onValueChanged.RemoveListener(CheckInputValueChanaged);
-            portInputField.onValueChanged.RemoveListener(CheckInputValueChanaged);
-            nickNameInputField.onValueChanged.RemoveListener(CheckInputValueChanaged);
+            urlInputField.onValueChanged.RemoveListener(HandleInputValueChanaged);
+            ProtocolInputField.onValueChanged.RemoveListener(HandleInputValueChanaged);
+            nicknameInputField.onValueChanged.RemoveListener(HandleInputValueChanaged);
         }
 
         #region Data 이벤트 함수
@@ -61,16 +61,11 @@ namespace MultiPartyWebRTC
         {
             currentURLText.text = url;
             currentProtocolText.text = protocol;
-            currentNickNameText.text = name;
+            currentNicknameText.text = name;
         }
         #endregion
 
         #region 버튼 클릭 이벤트 함수
-        private void InitSettingPanel()
-        {
-            applySettingButton.interactable = false;
-        }
-
         private void OnClickBackSetting()
         {
             ClearAllFieldText();
@@ -80,17 +75,21 @@ namespace MultiPartyWebRTC
 
         private void OnClickApplySetting()
         {
-            currentURLText.text = addressInputField.text;
-            currentProtocolText.text = portInputField.text;
+            UIEvent.ApplySettingEvent?.Invoke(CheckApplySettingData(currentURLText, urlInputField.text),
+                                              CheckApplySettingData(currentProtocolText, ProtocolInputField.text),
+                                              CheckApplySettingData(currentNicknameText, nicknameInputField.text));
 
             ClearAllFieldText();
-
-            UIEvent.ApplySettingEvent?.Invoke();
         }
         #endregion
 
         #region 인풋 이벤트 함수
-        private void CheckInputValueChanaged(string value)
+        private void InitSettingPanel()
+        {
+            applySettingButton.interactable = false;
+        }
+
+        private void HandleInputValueChanaged(string value)
         {
             UpdateApplyButtonState(!string.IsNullOrEmpty(value));
         }
@@ -104,13 +103,16 @@ namespace MultiPartyWebRTC
             }
             applySettingButton.interactable = isNull;
         }
+
+        private string CheckApplySettingData(TMP_Text currentText, string inputString) => string.IsNullOrEmpty(inputString) ? currentText.text : (currentText.text = inputString);
+
         #endregion
 
         private void ClearAllFieldText()
         {
-            addressInputField.text = string.Empty;
-            portInputField.text = string.Empty;
-            nickNameInputField.text = string.Empty;
+            urlInputField.text = string.Empty;
+            ProtocolInputField.text = string.Empty;
+            nicknameInputField.text = string.Empty;
         }
     }
 }

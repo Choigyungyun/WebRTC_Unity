@@ -21,22 +21,23 @@ namespace MultiPartyWebRTC
             versionText.text = Application.version + "v";
         }
 
-        private void Start()
+        private void OnEnable()
         {
             videoRoomButton.onClick.AddListener(OnClickVideoRoom);
             settingButton.onClick.AddListener(OnClickSetting);
             quitButton.onClick.AddListener(OnClickQuit);
         }
 
-        private void OnClickVideoRoom()
+        private void OnDisable()
         {
-            UIEvent.VideoRoomClickEvent?.Invoke();
+            videoRoomButton.onClick.RemoveListener(OnClickVideoRoom);
+            settingButton.onClick.RemoveListener(OnClickSetting);
+            quitButton.onClick.RemoveListener(OnClickQuit);
         }
 
-        private void OnClickSetting()
-        {
-            UIEvent.SettingClickEvent?.Invoke();
-        }
+        private void OnClickVideoRoom() => UIEvent.VideoRoomClickEvent?.Invoke();
+
+        private void OnClickSetting() => UIEvent.SettingClickEvent?.Invoke();
 
         private void OnClickQuit()
         {

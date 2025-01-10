@@ -15,20 +15,30 @@ namespace MultiPartyWebRTC
 
         private void OnEnable()
         {
+            // Home Panel Evets
             UIEvent.VideoRoomClickEvent += ShowVideoRoomPanel;
             UIEvent.SettingClickEvent += ShowSettingPanel;
 
+            // Setting Panel Evets
             UIEvent.BackSettingEvent += HideSettingPanel;
             UIEvent.ApplySettingEvent += ApplySetting;
+
+            // Video Room Panel Events
+            UIEvent.BackVideoRoomEvent += HideVideoRoomPanel;
         }
 
         private void OnDisable()
         {
+            // Home Panel Evets
             UIEvent.VideoRoomClickEvent -= ShowVideoRoomPanel;
             UIEvent.SettingClickEvent -= ShowSettingPanel;
 
+            // Home Panel Evets
             UIEvent.BackSettingEvent -= HideSettingPanel;
             UIEvent.ApplySettingEvent -= ApplySetting;
+
+            // Video Room Panel Events
+            UIEvent.BackVideoRoomEvent -= HideVideoRoomPanel;
         }
 
         private void Start()
@@ -37,25 +47,19 @@ namespace MultiPartyWebRTC
         }
 
         #region 이벤트 함수
-        private void ShowVideoRoomPanel()
-        {
-            PanelStackControl(videoRoomPanel, true);
-        }
+        // Home Panel Event 함수
+        private void ShowVideoRoomPanel() => PanelStackControl(videoRoomPanel, true);
+        private void ShowSettingPanel() => PanelStackControl(settingPanel, true);
 
-        private void ShowSettingPanel()
-        {
-            PanelStackControl(settingPanel, true);
-        }
-
-        private void HideSettingPanel()
-        {
-            PanelStackControl(settingPanel, false);
-        }
-
-        private void ApplySetting()
+        // Settin Panel Event 함수
+        private void HideSettingPanel() => PanelStackControl(settingPanel, false);
+        private void ApplySetting(string url, string protocol, string nickname)
         {
 
         }
+
+        // Video Room Event 함수
+        private void HideVideoRoomPanel() => PanelStackControl(videoRoomPanel, false);
         #endregion
 
         private void InitPanel()
