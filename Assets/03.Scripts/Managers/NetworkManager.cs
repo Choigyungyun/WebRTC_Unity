@@ -31,7 +31,7 @@ namespace MultiPartyWebRTC
             UIEvent.ApplySettingEvent += ApplyWebSocketNetworkSetting;
 
             // Video Room Panel Evets
-            UIEvent.BackVideoRoomEvent += webSocketHandler.DisconnectWebSocket;
+            UIEvent.HangUpVideoRoomEvent += webSocketHandler.DisconnectWebSocket;
         }
 
         private void OnDisable()
@@ -44,7 +44,7 @@ namespace MultiPartyWebRTC
             UIEvent.ApplySettingEvent -= ApplyWebSocketNetworkSetting;
 
             // Video Room Panel Events
-            UIEvent.BackVideoRoomEvent -= webSocketHandler.DisconnectWebSocket;
+            UIEvent.HangUpVideoRoomEvent -= webSocketHandler.DisconnectWebSocket;
 
             webSocketHandler.DisconnectWebSocket();
         }

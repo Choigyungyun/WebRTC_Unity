@@ -7,20 +7,41 @@ using UnityEngine.UI;
 public class VideoRoomPanel : MonoBehaviour
 {
     [Header("Buttons")]
-    [SerializeField] private Button backVideoRoomButton;
+    [SerializeField] private Button handUpVideoRoomButton;
+    [SerializeField] private Button streamButton;
+    [SerializeField] private Button microphoneButton;
 
     private void OnEnable()
     {
-        backVideoRoomButton.onClick.AddListener(OnClickBackVideoRoom);
+        handUpVideoRoomButton.onClick.AddListener(OnClickHangUpVideoRoom);
+        streamButton.onClick.AddListener(OnClickStream);
+        microphoneButton.onClick.AddListener(OnClickMicroPhone);
     }
 
     private void OnDisable()
     {
-        backVideoRoomButton.onClick.RemoveListener(OnClickBackVideoRoom);
+        handUpVideoRoomButton.onClick.RemoveListener(OnClickHangUpVideoRoom);
+        streamButton.onClick.RemoveListener(OnClickStream);
+        microphoneButton.onClick.RemoveListener(OnClickMicroPhone);
     }
 
-    private void OnClickBackVideoRoom()
+    private void OnClickHangUpVideoRoom()
     {
-        UIEvent.BackVideoRoomEvent?.Invoke();
+        UIEvent.HangUpVideoRoomEvent?.Invoke();
+    }
+
+    private void OnClickStream()
+    {
+        UIEvent.VideoRoomStreamClickEvent?.Invoke();
+    }
+
+    private void OnClickMicroPhone()
+    {
+        UIEvent.VideoRoomMicrophoneClickEvent?.Invoke();
+    }
+
+    private void ChangeButtonStateColor(Image buttonImage)
+    {
+
     }
 }

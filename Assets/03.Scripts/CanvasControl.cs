@@ -24,7 +24,7 @@ namespace MultiPartyWebRTC
             UIEvent.ApplySettingEvent += ApplySetting;
 
             // Video Room Panel Events
-            UIEvent.BackVideoRoomEvent += HideVideoRoomPanel;
+            UIEvent.HangUpVideoRoomEvent += HideVideoRoomPanel;
         }
 
         private void OnDisable()
@@ -38,7 +38,7 @@ namespace MultiPartyWebRTC
             UIEvent.ApplySettingEvent -= ApplySetting;
 
             // Video Room Panel Events
-            UIEvent.BackVideoRoomEvent -= HideVideoRoomPanel;
+            UIEvent.HangUpVideoRoomEvent -= HideVideoRoomPanel;
         }
 
         private void Start()

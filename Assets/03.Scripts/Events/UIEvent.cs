@@ -16,6 +16,8 @@ namespace MultiPartyWebRTC.Event
         public static Action<string, string, string> ApplySettingEvent;
 
         // Video Room Panel Event
-        public static Action BackVideoRoomEvent;
+        public static Action HangUpVideoRoomEvent;
+        public static Action VideoRoomStreamClickEvent;
+        public static Action VideoRoomMicrophoneClickEvent;
     }
 }
