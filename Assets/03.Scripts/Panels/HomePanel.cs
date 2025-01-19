@@ -6,10 +6,10 @@ using UnityEngine.SceneManagement;
 
 namespace MultiPartyWebRTC
 {
-    public class HomePanel : PanelManager
+    public class HomePanel : MonoBehaviour
     {
         [Header("Buttons")]
-        [SerializeField] private Button videoRoomButton;
+        [SerializeField] private Button connectButton;
         [SerializeField] private Button settingButton;
         [SerializeField] private Button quitButton;
 
@@ -23,19 +23,19 @@ namespace MultiPartyWebRTC
 
         private void OnEnable()
         {
-            videoRoomButton.onClick.AddListener(OnClickVideoRoom);
+            connectButton.onClick.AddListener(OnClickVideoRoom);
             settingButton.onClick.AddListener(OnClickSetting);
             quitButton.onClick.AddListener(OnClickQuit);
         }
 
         private void OnDisable()
         {
-            videoRoomButton.onClick.RemoveListener(OnClickVideoRoom);
+            connectButton.onClick.RemoveListener(OnClickVideoRoom);
             settingButton.onClick.RemoveListener(OnClickSetting);
             quitButton.onClick.RemoveListener(OnClickQuit);
         }
 
-        private void OnClickVideoRoom() => UIEvent.VideoRoomClickEvent?.Invoke();
+        private void OnClickVideoRoom() => UIEvent.ConnectClickEvent?.Invoke();
 
         private void OnClickSetting() => UIEvent.SettingClickEvent?.Invoke();
 

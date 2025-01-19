@@ -9,6 +9,7 @@ namespace MultiPartyWebRTC
         [Header("Panel Objects")]
         [SerializeField] private GameObject homePanel;
         [SerializeField] private GameObject settingPanel;
+        [SerializeField] private GameObject connectPanel;
         [SerializeField] private GameObject videoRoomPanel;
 
         private Stack<GameObject> panelStack = new();
@@ -16,29 +17,27 @@ namespace MultiPartyWebRTC
         private void OnEnable()
         {
             // Home Panel Evets
-            UIEvent.VideoRoomClickEvent += ShowVideoRoomPanel;
             UIEvent.SettingClickEvent += ShowSettingPanel;
+            UIEvent.ConnectClickEvent += ShowConnectPanel;
 
             // Setting Panel Evets
-            UIEvent.BackSettingEvent += HideSettingPanel;
-            UIEvent.ApplySettingEvent += ApplySetting;
+            UIEvent.BackSettingPanelClickEvent += HideSettingPanel;
 
-            // Video Room Panel Events
-            UIEvent.HangUpVideoRoomEvent += HideVideoRoomPanel;
+            // Connect Panel Events
+            UIEvent.BackConnectPanelEvent += HideConnectPanel;
         }
 
         private void OnDisable()
         {
             // Home Panel Evets
-            UIEvent.VideoRoomClickEvent -= ShowVideoRoomPanel;
+            UIEvent.ConnectClickEvent -= ShowConnectPanel;
             UIEvent.SettingClickEvent -= ShowSettingPanel;
 
-            // Home Panel Evets
-            UIEvent.BackSettingEvent -= HideSettingPanel;
-            UIEvent.ApplySettingEvent -= ApplySetting;
+            // Setting Panel Evets
+            UIEvent.BackSettingPanelClickEvent -= HideSettingPanel;
 
-            // Video Room Panel Events
-            UIEvent.HangUpVideoRoomEvent -= HideVideoRoomPanel;
+            // Connect Panel Events
+            UIEvent.BackConnectPanelEvent -= HideConnectPanel;
         }
 
         private void Start()
@@ -47,19 +46,21 @@ namespace MultiPartyWebRTC
         }
 
         #region 이벤트 함수
-        // Home Panel Event 함수
-        private void ShowVideoRoomPanel() => PanelStackControl(videoRoomPanel, true);
-        private void ShowSettingPanel() => PanelStackControl(settingPanel, true);
+        // Panel show
+        private void ShowSettingPanel() => PanelStackControl(settingPanel, true, false);
+        private void ShowConnectPanel() => PanelStackControl(connectPanel, true, false);
+        private void ShowVideoRoomPanel() => PanelStackControl(videoRoomPanel, true, false);
 
-        // Settin Panel Event 함수
-        private void HideSettingPanel() => PanelStackControl(settingPanel, false);
-        private void ApplySetting(string url, string protocol, string nickname)
-        {
+        // Panel hide
+        private void HideSettingPanel() => PanelStackControl(settingPanel, false, false);
+        private void HideConnectPanel() => PanelStackControl(connectPanel, false, false);
 
-        }
+        // Setting panel events
 
-        // Video Room Event 함수
-        private void HideVideoRoomPanel() => PanelStackControl(videoRoomPanel, false);
+        // Connect panel events
+
+        // VideoRoom panel events
+
         #endregion
 
         private void InitPanel()
@@ -69,11 +70,11 @@ namespace MultiPartyWebRTC
             ResetPanelStackWithFistPanel();
         }
 
-        private void PanelStackControl(GameObject panel, bool enablePanel)
+        private void PanelStackControl(GameObject panel, bool enablePanel, bool isAlive)
         {
             if (enablePanel)
             {
-                ActivatePanel(panel);
+                ActivatePanel(panel, isAlive);
             }
             else
             {
@@ -81,7 +82,7 @@ namespace MultiPartyWebRTC
             }
         }
 
-        private void ActivatePanel(GameObject panel)
+        private void ActivatePanel(GameObject panel, bool isAlive)
         {
             if(panelStack.Count == 0)
             {
@@ -89,7 +90,10 @@ namespace MultiPartyWebRTC
                 return;
             }
 
-            panelStack.Peek().SetActive(false);
+            if(!isAlive)
+            {
+                panelStack.Peek().SetActive(false);
+            }
 
             if (panelStack.Contains(panel))
             {
