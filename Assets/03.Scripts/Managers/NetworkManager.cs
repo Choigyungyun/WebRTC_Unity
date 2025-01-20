@@ -71,6 +71,26 @@ namespace MultiPartyWebRTC
         {
             webSocketHandler.UpdateWebSocketSetting();
             DataEvent.UpdateUserProfileDataEvent?.Invoke(UserProfileSetting.Nickname);
+            DataEvent.UpdateVideoDataEvent?.Invoke(WebRTCSetting.StreamSize, WebRTCSetting.VideoCodec);
+
+            if(WebRTCSetting.VideoCodec == null)
+            {
+                Debug.Log($"Update data value :\n" +
+                          $"WebSocket URL : {WebSocketSetting.WebSocketURL}\n" +
+                          $"WebSocket protocol : {WebSocketSetting.WebSocketProtocol}\n" +
+                          $"User nickname : {UserProfileSetting.Nickname}\n" +
+                          $"Video stream size : {WebRTCSetting.StreamSize}\n" +
+                          $"Video codec : null");
+            }
+            else
+            {
+                Debug.Log($"Update data value :\n" +
+                          $"WebSocket URL : {WebSocketSetting.WebSocketURL}\n" +
+                          $"WebSocket protocol : {WebSocketSetting.WebSocketProtocol}\n" +
+                          $"User nickname : {UserProfileSetting.Nickname}\n" +
+                          $"Video stream size : {WebRTCSetting.StreamSize}\n" +
+                          $"Video codec : {WebRTCSetting.VideoCodec.mimeType} {WebRTCSetting.VideoCodec.sdpFmtpLine}");
+            }
         }
 
         private void ApplyWebSocketNetworkSetting(string url, string protocol, string nickname, Vector2Int streamSize, RTCRtpCodecCapability videoCodec)

@@ -6,6 +6,7 @@ using Unity.WebRTC;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace MultiPartyWebRTC
 {
@@ -28,10 +29,14 @@ namespace MultiPartyWebRTC
         [SerializeField] private TMP_Text currentProtocolText;
         [SerializeField] private TMP_Text currentNicknameText;
         [SerializeField] private TMP_Text currentICEServerText;
+        [SerializeField] private TMP_Text stateApplyText;
 
         [Header("DropDowns")]
         [SerializeField] private TMP_Dropdown streamSizeDropdown;
         [SerializeField] private TMP_Dropdown codecSelectDropDown;
+
+        private int currentStreamSizeIndex = 0;
+        private int currentCodecSelectIndex = 0;
 
         private List<Vector2Int> streamSizeList = new();
         private List<RTCRtpCodecCapability> availableCodecs;
@@ -48,21 +53,24 @@ namespace MultiPartyWebRTC
             // DataEvent
             DataEvent.UpdateWebSocketDataEvent += UpdateWebSocketSettingValue;
             DataEvent.UpdateUserProfileDataEvent += UpdateUserProfileSettingValue;
+            DataEvent.UpdateVideoDataEvent += UpdateVideoSettingValue;
 
             // Buttons
             backSettingButton.onClick.AddListener(OnClickBackSetting);
-            applySettingButton.onClick.AddListener(OnClickApplySetting);
+            applySettingButton.onClick.AddListener(CheckApplyValue);
 
             // Inputs
             urlInputField.onValueChanged.AddListener(HandleInputValueChanaged);
             protocolInputField.onValueChanged.AddListener(HandleInputValueChanaged);
             nicknameInputField.onValueChanged.AddListener(HandleInputValueChanaged);
-            streamSizeWidthInputField.onValueChanged.AddListener(HandleInputValueChanaged);
-            streamSizeHeightInputField.onValueChanged.AddListener(HandleInputValueChanaged);
 
             // Dropdowns
             streamSizeDropdown.onValueChanged.AddListener(OnChangeStreamSizeSelect);
             codecSelectDropDown.onValueChanged.AddListener(OnChangeCodecSelect);
+
+            // Texts
+            stateApplyText.text = string.Empty;
+
         }
 
         private void OnDisable()
@@ -70,17 +78,16 @@ namespace MultiPartyWebRTC
             // DataEvent
             DataEvent.UpdateWebSocketDataEvent -= UpdateWebSocketSettingValue;
             DataEvent.UpdateUserProfileDataEvent -= UpdateUserProfileSettingValue;
+            DataEvent.UpdateVideoDataEvent -= UpdateVideoSettingValue;
 
             // Buttons
             backSettingButton.onClick.RemoveListener(OnClickBackSetting);
-            applySettingButton.onClick.RemoveListener(OnClickApplySetting);
+            applySettingButton.onClick.RemoveListener(CheckApplyValue);
 
             // Inputs
             urlInputField.onValueChanged.RemoveListener(HandleInputValueChanaged);
             protocolInputField.onValueChanged.RemoveListener(HandleInputValueChanaged);
             nicknameInputField.onValueChanged.RemoveListener(HandleInputValueChanaged);
-            streamSizeWidthInputField.onValueChanged.RemoveListener(HandleInputValueChanaged);
-            streamSizeHeightInputField.onValueChanged.RemoveListener(HandleInputValueChanaged);
 
             // Dropdowns
             streamSizeDropdown.onValueChanged.RemoveListener(OnChangeStreamSizeSelect);
@@ -95,6 +102,15 @@ namespace MultiPartyWebRTC
         }
 
         private void UpdateUserProfileSettingValue(string nickname) => currentNicknameText.text = nickname;
+
+        private void UpdateVideoSettingValue(Vector2Int size, RTCRtpCodecCapability codec)
+        {
+            streamSizeDropdown.value = streamSizeList.IndexOf(size) + 1;
+            codecSelectDropDown.value = availableCodecs.IndexOf(codec) + 1;
+
+            currentStreamSizeIndex = streamSizeDropdown.value;
+            currentCodecSelectIndex = codecSelectDropDown.value;
+        }
         #endregion
 
         #region 버튼 클릭 이벤트 함수
@@ -105,15 +121,38 @@ namespace MultiPartyWebRTC
             UIEvent.BackSettingPanelClickEvent?.Invoke();
         }
 
+        private void CheckApplyValue()
+        {
+            if (!streamSizeWidthInputField.interactable ||
+                !streamSizeHeightInputField.interactable ||
+                (!string.IsNullOrEmpty(streamSizeWidthInputField.text) && !string.IsNullOrEmpty(streamSizeHeightInputField.text)))
+            {
+                OnClickApplySetting();
+            }
+            else
+            {
+                stateApplyText.color = Color.red;
+                stateApplyText.text = "An empty stream size value exists";
+            }
+        }
+
         private void OnClickApplySetting()
         {
             DataEvent.ApplySettingDataEvent?.Invoke(CheckApplySettingData(currentURLText, urlInputField.text),
-                                                    CheckApplySettingData(currentProtocolText, protocolInputField.text),
-                                                    CheckApplySettingData(currentNicknameText, nicknameInputField.text),
-                                                    CheckStreamSize(streamSizeDropdown.value),
-                                                    CheckCodec(codecSelectDropDown.value));
+                        CheckApplySettingData(currentProtocolText, protocolInputField.text),
+                        CheckApplySettingData(currentNicknameText, nicknameInputField.text),
+                        CheckStreamSize(streamSizeDropdown.value),
+                        CheckCodec(codecSelectDropDown.value));
 
             ClearAllFieldText();
+
+            stateApplyText.color = Color.green;
+            stateApplyText.text = "Apply success";
+
+            currentStreamSizeIndex = streamSizeDropdown.value;
+            currentCodecSelectIndex = codecSelectDropDown.value;
+
+            applySettingButton.interactable = false;
         }
         #endregion
 
@@ -159,13 +198,14 @@ namespace MultiPartyWebRTC
             List<TMP_Dropdown.OptionData> list = availableCodecs
                 .Select(codec => new TMP_Dropdown.OptionData { text = codec.mimeType + " " + codec.sdpFmtpLine })
                 .ToList();
-
             codecSelectDropDown.options.AddRange(list);
             RTCRtpCodecCapability previewCodec = WebRTCSetting.VideoCodec;
             codecSelectDropDown.value = previewCodec == null
                 ? 0
                 : availableCodecs.FindIndex(x =>
                     x.mimeType == previewCodec.mimeType && x.sdpFmtpLine == previewCodec.sdpFmtpLine) + 1;
+
+            Debug.Log(WebRTCSetting.VideoCodec != null);
         }
 
         private void OnChangeStreamSizeSelect(int index)
@@ -175,21 +215,16 @@ namespace MultiPartyWebRTC
             streamSizeWidthInputField.interactable = isCustom;
             streamSizeHeightInputField.interactable = isCustom;
 
-            HandleDropdownValueChanged(streamSizeDropdown, index);
+            HandleDropdownValueChanged(currentStreamSizeIndex, index);
         }
 
-        private void OnChangeCodecSelect(int index)
-        {
-            WebRTCSetting.VideoCodec = index == 0 ? null : availableCodecs[index];
-
-            HandleDropdownValueChanged(codecSelectDropDown, index);
-        }
+        private void OnChangeCodecSelect(int index) => HandleDropdownValueChanged(currentCodecSelectIndex, index);
 
         private Vector2Int CheckStreamSize(int index) => index == 0 ?
-            new Vector2Int(int.Parse(streamSizeWidthInputField.text), int.Parse(streamSizeHeightInputField.text)) : streamSizeList[index];
+            new Vector2Int(int.Parse(streamSizeWidthInputField.text), int.Parse(streamSizeHeightInputField.text)) : streamSizeList[index - 1];
 
         private RTCRtpCodecCapability CheckCodec(int index) => index == 0 ?
-            null : availableCodecs[index];
+            null : availableCodecs[index - 1];
         #endregion
 
         private void InitSettingPanel()
@@ -201,17 +236,8 @@ namespace MultiPartyWebRTC
         }
 
         private void HandleInputValueChanaged(string value) => UpdateApplyButtonState(!string.IsNullOrEmpty(value));
-        private void HandleDropdownValueChanged(TMP_Dropdown dropdown, int index)
-        {
-            if (dropdown.value != index)
-            {
-                UpdateApplyButtonState(true);
-            }
-            else
-            {
-                UpdateApplyButtonState(false);
-            }
-        }
+
+        private void HandleDropdownValueChanged(int currentIndex, int index) => UpdateApplyButtonState(currentIndex != index);
 
         private void UpdateApplyButtonState(bool isNull)
         {
