@@ -22,9 +22,6 @@ namespace MultiPartyWebRTC.Handler
             WebSocketSetting.WebSocketProtocol = WebSocketSetting.Default_Protocol;
         }
 
-        public void UpdateWebSocketSetting() => DataEvent.UpdateWebSocketDataEvent?.Invoke(WebSocketSetting.WebSocketURL,
-                                                                                            WebSocketSetting.WebSocketProtocol);
-
         public void ConnectWebSocket()
         {
             InitWebSocket(WebSocketSetting.WebSocketURL, WebSocketSetting.WebSocketProtocol);

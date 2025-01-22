@@ -7,6 +7,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System;
+using UnityEditor;
 
 namespace MultiPartyWebRTC
 {
@@ -31,157 +33,102 @@ namespace MultiPartyWebRTC
         [SerializeField] private TMP_Text currentICEServerText;
         [SerializeField] private TMP_Text stateApplyText;
 
-        [Header("DropDowns")]
+        [Header("Dropdowns")]
         [SerializeField] private TMP_Dropdown streamSizeDropdown;
-        [SerializeField] private TMP_Dropdown codecSelectDropDown;
+        [SerializeField] private TMP_Dropdown codecSelectDropdown;
 
-        private int currentStreamSizeIndex = 0;
-        private int currentCodecSelectIndex = 0;
-
+        private int currentStreamSizeIndex;
+        private int currentCodecSelectIndex;
         private List<Vector2Int> streamSizeList = new();
         private List<RTCRtpCodecCapability> availableCodecs;
-
-        private static readonly string[] excludeCodecMimeType = { "video/red", "video/ulpfec", "video/rtx" };
+        private static readonly string[] ExcludeCodecMimeTypes = { "video/red", "video/ulpfec", "video/rtx" };
 
         private void Awake()
         {
-            InitSettingPanel();
+            InitializePanel();
+            PopulateStreamSizeList();
+            PopulateCodecList();
         }
 
         private void OnEnable()
         {
-            // DataEvent
-            DataEvent.UpdateWebSocketDataEvent += UpdateWebSocketSettingValue;
-            DataEvent.UpdateUserProfileDataEvent += UpdateUserProfileSettingValue;
-            DataEvent.UpdateVideoDataEvent += UpdateVideoSettingValue;
-
-            // Buttons
-            backSettingButton.onClick.AddListener(OnClickBackSetting);
-            applySettingButton.onClick.AddListener(CheckApplyValue);
-
-            // Inputs
-            urlInputField.onValueChanged.AddListener(HandleInputValueChanaged);
-            protocolInputField.onValueChanged.AddListener(HandleInputValueChanaged);
-            nicknameInputField.onValueChanged.AddListener(HandleInputValueChanaged);
-
-            // Dropdowns
-            streamSizeDropdown.onValueChanged.AddListener(OnChangeStreamSizeSelect);
-            codecSelectDropDown.onValueChanged.AddListener(OnChangeCodecSelect);
-
-            // Texts
-            stateApplyText.text = string.Empty;
-
+            AddListeners();
+            ResetStateText();
         }
 
         private void OnDisable()
         {
-            // DataEvent
-            DataEvent.UpdateWebSocketDataEvent -= UpdateWebSocketSettingValue;
-            DataEvent.UpdateUserProfileDataEvent -= UpdateUserProfileSettingValue;
-            DataEvent.UpdateVideoDataEvent -= UpdateVideoSettingValue;
-
-            // Buttons
-            backSettingButton.onClick.RemoveListener(OnClickBackSetting);
-            applySettingButton.onClick.RemoveListener(CheckApplyValue);
-
-            // Inputs
-            urlInputField.onValueChanged.RemoveListener(HandleInputValueChanaged);
-            protocolInputField.onValueChanged.RemoveListener(HandleInputValueChanaged);
-            nicknameInputField.onValueChanged.RemoveListener(HandleInputValueChanaged);
-
-            // Dropdowns
-            streamSizeDropdown.onValueChanged.RemoveListener(OnChangeStreamSizeSelect);
-            codecSelectDropDown.onValueChanged.RemoveListener(OnChangeCodecSelect);
+            RemoveListeners();
         }
 
-        #region Data 이벤트 함수
-        private void UpdateWebSocketSettingValue(string url, string protocol)
+        #region Initialization
+        private void InitializePanel()
         {
-            currentURLText.text = url;
-            currentProtocolText.text = protocol;
-        }
-
-        private void UpdateUserProfileSettingValue(string nickname) => currentNicknameText.text = nickname;
-
-        private void UpdateVideoSettingValue(Vector2Int size, RTCRtpCodecCapability codec)
-        {
-            streamSizeDropdown.value = streamSizeList.IndexOf(size) + 1;
-            codecSelectDropDown.value = availableCodecs.IndexOf(codec) + 1;
-
-            currentStreamSizeIndex = streamSizeDropdown.value;
-            currentCodecSelectIndex = codecSelectDropDown.value;
-        }
-        #endregion
-
-        #region 버튼 클릭 이벤트 함수
-        private void OnClickBackSetting()
-        {
-            ClearAllFieldText();
-
-            UIEvent.BackSettingPanelClickEvent?.Invoke();
-        }
-
-        private void CheckApplyValue()
-        {
-            if (!streamSizeWidthInputField.interactable ||
-                !streamSizeHeightInputField.interactable ||
-                (!string.IsNullOrEmpty(streamSizeWidthInputField.text) && !string.IsNullOrEmpty(streamSizeHeightInputField.text)))
-            {
-                OnClickApplySetting();
-            }
-            else
-            {
-                stateApplyText.color = Color.red;
-                stateApplyText.text = "An empty stream size value exists";
-            }
-        }
-
-        private void OnClickApplySetting()
-        {
-            DataEvent.ApplySettingDataEvent?.Invoke(CheckApplySettingData(currentURLText, urlInputField.text),
-                        CheckApplySettingData(currentProtocolText, protocolInputField.text),
-                        CheckApplySettingData(currentNicknameText, nicknameInputField.text),
-                        CheckStreamSize(streamSizeDropdown.value),
-                        CheckCodec(codecSelectDropDown.value));
-
-            ClearAllFieldText();
-
-            stateApplyText.color = Color.green;
-            stateApplyText.text = "Apply success";
-
-            currentStreamSizeIndex = streamSizeDropdown.value;
-            currentCodecSelectIndex = codecSelectDropDown.value;
-
             applySettingButton.interactable = false;
+
+            currentURLText.text = WebSocketSetting.WebSocketURL;
+            currentProtocolText.text = WebSocketSetting.WebSocketProtocol;
+            currentNicknameText.text = UserProfileSetting.Nickname;
+        }
+
+        private void AddListeners()
+        {
+            backSettingButton.onClick.AddListener(HandleBackButtonClick);
+            applySettingButton.onClick.AddListener(ApplySettings);
+
+            urlInputField.onValueChanged.AddListener(OnInputValueChanged);
+            protocolInputField.onValueChanged.AddListener(OnInputValueChanged);
+            nicknameInputField.onValueChanged.AddListener(OnInputValueChanged);
+            streamSizeWidthInputField.onValueChanged.AddListener(OnInputValueChanged);
+            streamSizeHeightInputField.onValueChanged.AddListener(OnInputValueChanged);
+
+            streamSizeDropdown.onValueChanged.AddListener(OnStreamSizeDropdownChanged);
+            codecSelectDropdown.onValueChanged.AddListener(OnCodecDropdownChanged);
+        }
+
+        private void RemoveListeners()
+        {
+            backSettingButton.onClick.RemoveListener(HandleBackButtonClick);
+            applySettingButton.onClick.RemoveListener(ApplySettings);
+
+            urlInputField.onValueChanged.RemoveListener(OnInputValueChanged);
+            protocolInputField.onValueChanged.RemoveListener(OnInputValueChanged);
+            nicknameInputField.onValueChanged.RemoveListener(OnInputValueChanged);
+            streamSizeWidthInputField.onValueChanged.RemoveListener(OnInputValueChanged);
+            streamSizeHeightInputField.onValueChanged.RemoveListener(OnInputValueChanged);
+
+            streamSizeDropdown.onValueChanged.RemoveListener(OnStreamSizeDropdownChanged);
+            codecSelectDropdown.onValueChanged.RemoveListener(OnCodecDropdownChanged);
         }
         #endregion
 
-        #region 인풋 이벤트 함수
-        private string CheckApplySettingData(TMP_Text currentText, string inputString)
-            => string.IsNullOrEmpty(inputString) ? currentText.text : (currentText.text = inputString);
-
-        #endregion
-
-        #region 드랍다운 이벤트 함수
-        private void GetScreenSizeList()
+        #region Dropdown Handling
+        private void PopulateStreamSizeList()
         {
-            foreach (Resolution resolution in Screen.resolutions)
-            {
-                streamSizeList.Add(new Vector2Int(resolution.width, resolution.height));
-            }
+            streamSizeList = Screen.resolutions.Select(res => new Vector2Int(res.width, res.height)).ToList();
 
-            List<TMP_Dropdown.OptionData> optionList = streamSizeList.Select(size => new TMP_Dropdown.OptionData($"{size.x} x {size.y}")).ToList();
-            optionList.Insert(0, new TMP_Dropdown.OptionData("Custom"));
-            streamSizeDropdown.options = optionList;
+            var options = streamSizeList
+                .Select(size => new TMP_Dropdown.OptionData($"{size.x} x {size.y}"))
+                .ToList();
 
-            bool existInList = streamSizeList.Contains(WebRTCSetting.StreamSize);
-            if (existInList)
+            options.Insert(0, new TMP_Dropdown.OptionData("Custom"));
+            streamSizeDropdown.options = options;
+
+            SetInitialStreamSizeSelection();
+        }
+
+        private void SetInitialStreamSizeSelection()
+        {
+            bool existsInList = streamSizeList.Contains(WebRTCSetting.StreamSize);
+
+            currentStreamSizeIndex = existsInList
+                ? streamSizeList.IndexOf(WebRTCSetting.StreamSize) + 1
+                : 0;
+
+            streamSizeDropdown.value = currentStreamSizeIndex;
+
+            if (!existsInList)
             {
-                streamSizeDropdown.value = streamSizeList.IndexOf(WebRTCSetting.StreamSize);
-            }
-            else
-            {
-                streamSizeDropdown.value = streamSizeList.Count;
                 streamSizeWidthInputField.text = Screen.width.ToString();
                 streamSizeHeightInputField.text = Screen.height.ToString();
                 streamSizeWidthInputField.interactable = true;
@@ -189,70 +136,165 @@ namespace MultiPartyWebRTC
             }
         }
 
-        private void GetCodecList()
+        private void PopulateCodecList()
         {
-            RTCRtpCapabilities capabilities = RTCRtpSender.GetCapabilities(TrackKind.Video);
-            availableCodecs = capabilities.codecs
-                .Where(codec => !excludeCodecMimeType.Contains(codec.mimeType))
+            availableCodecs = RTCRtpSender.GetCapabilities(TrackKind.Video).codecs
+                .Where(codec => !ExcludeCodecMimeTypes.Contains(codec.mimeType))
                 .ToList();
-            List<TMP_Dropdown.OptionData> list = availableCodecs
-                .Select(codec => new TMP_Dropdown.OptionData { text = codec.mimeType + " " + codec.sdpFmtpLine })
+
+            // "Default" 항목을 추가
+            var options = availableCodecs
+                .Select(codec => new TMP_Dropdown.OptionData($"{codec.mimeType} {codec.sdpFmtpLine}"))
                 .ToList();
-            codecSelectDropDown.options.AddRange(list);
-            RTCRtpCodecCapability previewCodec = WebRTCSetting.VideoCodec;
-            codecSelectDropDown.value = previewCodec == null
-                ? 0
-                : availableCodecs.FindIndex(x =>
-                    x.mimeType == previewCodec.mimeType && x.sdpFmtpLine == previewCodec.sdpFmtpLine) + 1;
 
-            Debug.Log(WebRTCSetting.VideoCodec != null);
-        }
+            options.Insert(0, new TMP_Dropdown.OptionData("Default"));  // "Default" 추가
 
-        private void OnChangeStreamSizeSelect(int index)
-        {
-            bool isCustom = index == 0;
+            codecSelectDropdown.options = options;
 
-            streamSizeWidthInputField.interactable = isCustom;
-            streamSizeHeightInputField.interactable = isCustom;
+            // "Default"가 선택된 경우, `availableCodecs`에서 "Default"와 일치하는 항목이 없으므로 `null`로 설정
+            codecSelectDropdown.value = availableCodecs.FindIndex(codec =>
+                codec.mimeType == WebRTCSetting.VideoCodec?.mimeType &&
+                codec.sdpFmtpLine == WebRTCSetting.VideoCodec?.sdpFmtpLine) + 1;
 
-            HandleDropdownValueChanged(currentStreamSizeIndex, index);
-        }
-
-        private void OnChangeCodecSelect(int index) => HandleDropdownValueChanged(currentCodecSelectIndex, index);
-
-        private Vector2Int CheckStreamSize(int index) => index == 0 ?
-            new Vector2Int(int.Parse(streamSizeWidthInputField.text), int.Parse(streamSizeHeightInputField.text)) : streamSizeList[index - 1];
-
-        private RTCRtpCodecCapability CheckCodec(int index) => index == 0 ?
-            null : availableCodecs[index - 1];
-        #endregion
-
-        private void InitSettingPanel()
-        {
-            applySettingButton.interactable = false;
-
-            GetScreenSizeList();
-            GetCodecList();
-        }
-
-        private void HandleInputValueChanaged(string value) => UpdateApplyButtonState(!string.IsNullOrEmpty(value));
-
-        private void HandleDropdownValueChanged(int currentIndex, int index) => UpdateApplyButtonState(currentIndex != index);
-
-        private void UpdateApplyButtonState(bool isNull)
-        {
-            if (applySettingButton.interactable == isNull)
+            // "Default"가 선택되었을 경우, value를 0으로 설정
+            if (codecSelectDropdown.value != 0)
             {
                 return;
             }
-            applySettingButton.interactable = isNull;
+
+            WebRTCSetting.VideoCodec = null;  // "Default"를 선택하면 VideoCodec은 null로 설정
         }
 
-        private void ClearAllFieldText()
+        private void OnStreamSizeDropdownChanged(int index)
+        {
+            bool isCustom = index == 0;
+            streamSizeWidthInputField.interactable = isCustom;
+            streamSizeHeightInputField.interactable = isCustom;
+
+            CheckForChanges(currentStreamSizeIndex, index);
+        }
+
+        private void OnCodecDropdownChanged(int index)
+        {
+            CheckForChanges(currentCodecSelectIndex, index);
+        }
+        #endregion
+
+        #region Button Handlers
+        private void HandleBackButtonClick()
+        {
+            ResetDropdownValue();
+            ResetStreamSizeInputs();
+            ClearInputFields();
+
+            UIEvent.BackSettingPanelClickEvent?.Invoke();
+        }
+
+        private void ApplySettings()
+        {
+            if (ValidateStreamSizeInputs())
+            {
+                SaveSettings();
+                DisplayStateText("Apply success", Color.green);
+            }
+            else
+            {
+                DisplayStateText("An empty stream size value exists", Color.red);
+            }
+        }
+        #endregion
+
+        #region Utility Methods
+        private void SaveSettings()
+        {
+            WebRTCSetting.StreamSize = GetSelectedStreamSize();
+            WebRTCSetting.VideoCodec = GetSelectedCodec();
+            WebSocketSetting.WebSocketURL = SaveTextField(currentURLText, urlInputField.text);
+            WebSocketSetting.WebSocketProtocol = SaveTextField(currentProtocolText, protocolInputField.text);
+            UserProfileSetting.Nickname = SaveTextField(currentNicknameText, nicknameInputField.text);
+
+            currentStreamSizeIndex = streamSizeDropdown.value;
+            currentCodecSelectIndex = codecSelectDropdown.value;
+
+            applySettingButton.interactable = false;
+
+            if(WebRTCSetting.VideoCodec == null)
+            {
+                Debug.Log($"Settings have been applied.\n" +
+                          $"WebSocket URL : {WebSocketSetting.WebSocketURL}\n" +
+                          $"WebSocket Protocol : {WebSocketSetting.WebSocketProtocol}\n" +
+                          $"Nickname : {UserProfileSetting.Nickname}\n" +
+                          $"Stream size : {WebRTCSetting.StreamSize}\n" +
+                          $"Video codec : Default");
+            }
+            else
+            {
+                Debug.Log($"Settings have been applied.\n" +
+                          $"WebSocket URL : {WebSocketSetting.WebSocketURL}\n" +
+                          $"WebSocket Protocol : {WebSocketSetting.WebSocketProtocol}\n" +
+                          $"Nickname : {UserProfileSetting.Nickname}\n" +
+                          $"Stream size : {WebRTCSetting.StreamSize}\n" +
+                          $"Video codec : {WebRTCSetting.VideoCodec.mimeType} {WebRTCSetting.VideoCodec.sdpFmtpLine}");
+            }
+        }
+
+        private bool ValidateStreamSizeInputs() =>
+            !streamSizeWidthInputField.interactable ||
+            !streamSizeHeightInputField.interactable ||
+            (!string.IsNullOrEmpty(streamSizeWidthInputField.text) && !string.IsNullOrEmpty(streamSizeHeightInputField.text));
+
+        private void ResetStreamSizeInputs()
+        {
+            if (currentStreamSizeIndex == 0)
+            {
+                streamSizeWidthInputField.text = WebRTCSetting.StreamSize.x.ToString();
+                streamSizeHeightInputField.text = WebRTCSetting.StreamSize.y.ToString();
+            }
+            else
+            {
+                streamSizeWidthInputField.text = string.Empty;
+                streamSizeHeightInputField.text = string.Empty;
+            }
+        }
+
+        private void ResetDropdownValue()
+        {
+            streamSizeDropdown.value = streamSizeList.IndexOf(WebRTCSetting.StreamSize) + 1;
+            codecSelectDropdown.value = availableCodecs.IndexOf(WebRTCSetting.VideoCodec) + 1;
+        }
+
+        private void ClearInputFields()
         {
             urlInputField.text = string.Empty;
             protocolInputField.text = string.Empty;
             nicknameInputField.text = string.Empty;
         }
+
+        private Vector2Int GetSelectedStreamSize() =>
+            streamSizeDropdown.value == 0
+                ? new Vector2Int(int.Parse(streamSizeWidthInputField.text), int.Parse(streamSizeHeightInputField.text))
+                : streamSizeList[streamSizeDropdown.value - 1];
+
+        private RTCRtpCodecCapability GetSelectedCodec() =>
+            codecSelectDropdown.value == 0 ? null : availableCodecs[codecSelectDropdown.value - 1];
+
+        private string SaveTextField(TMP_Text textField, string input) =>
+            string.IsNullOrEmpty(input) ? textField.text : (textField.text = input);
+
+        private void CheckForChanges(int currentIndex, int newIndex) =>
+            applySettingButton.interactable = currentIndex != newIndex;
+
+        private void OnInputValueChanged(string value) =>
+            applySettingButton.interactable = !string.IsNullOrEmpty(value);
+
+        private void DisplayStateText(string message, Color color)
+        {
+            stateApplyText.text = message;
+            stateApplyText.color = color;
+        }
+
+        private void ResetStateText() =>
+            stateApplyText.text = string.Empty;
+        #endregion
     }
 }

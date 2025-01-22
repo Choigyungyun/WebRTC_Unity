@@ -17,10 +17,6 @@ namespace MultiPartyWebRTC
 
         private void Awake()
         {
-            if(this != null)
-            {
-                return;
-            }
             DontDestroyOnLoad(this);
         }
 
@@ -41,10 +37,9 @@ namespace MultiPartyWebRTC
         {
             // Home Panel Events
             UIEvent.ConnectClickEvent += webSocketHandler.ConnectWebSocket;
-            UIEvent.SettingClickEvent += UpdateNetworkSetting;
 
             // Setting Panel Events
-            DataEvent.ApplySettingDataEvent += ApplyWebSocketNetworkSetting;
+            UIEvent.ApplySettingClickEvent += ApplyWebSocketNetworkSetting;
 
             // Video Room Panel Evets
             UIEvent.HangUpVideoRoomEvent += webSocketHandler.DisconnectWebSocket;
@@ -54,10 +49,6 @@ namespace MultiPartyWebRTC
         {
             // Home Panel Events
             UIEvent.ConnectClickEvent -= webSocketHandler.ConnectWebSocket;
-            UIEvent.SettingClickEvent -= UpdateNetworkSetting;
-
-            // Setting Panel Events
-            DataEvent.ApplySettingDataEvent -= ApplyWebSocketNetworkSetting;
 
             // Video Room Panel Events
             UIEvent.HangUpVideoRoomEvent -= webSocketHandler.DisconnectWebSocket;
@@ -67,60 +58,8 @@ namespace MultiPartyWebRTC
 
         private void SetDefaultUserProfile() => UserProfileSetting.Nickname = UserProfileSetting.Default_Nickname;
 
-        private void UpdateNetworkSetting()
+        private void ApplyWebSocketNetworkSetting()
         {
-            webSocketHandler.UpdateWebSocketSetting();
-            DataEvent.UpdateUserProfileDataEvent?.Invoke(UserProfileSetting.Nickname);
-            DataEvent.UpdateVideoDataEvent?.Invoke(WebRTCSetting.StreamSize, WebRTCSetting.VideoCodec);
-
-            if(WebRTCSetting.VideoCodec == null)
-            {
-                Debug.Log($"Update data value :\n" +
-                          $"WebSocket URL : {WebSocketSetting.WebSocketURL}\n" +
-                          $"WebSocket protocol : {WebSocketSetting.WebSocketProtocol}\n" +
-                          $"User nickname : {UserProfileSetting.Nickname}\n" +
-                          $"Video stream size : {WebRTCSetting.StreamSize}\n" +
-                          $"Video codec : null");
-            }
-            else
-            {
-                Debug.Log($"Update data value :\n" +
-                          $"WebSocket URL : {WebSocketSetting.WebSocketURL}\n" +
-                          $"WebSocket protocol : {WebSocketSetting.WebSocketProtocol}\n" +
-                          $"User nickname : {UserProfileSetting.Nickname}\n" +
-                          $"Video stream size : {WebRTCSetting.StreamSize}\n" +
-                          $"Video codec : {WebRTCSetting.VideoCodec.mimeType} {WebRTCSetting.VideoCodec.sdpFmtpLine}");
-            }
-        }
-
-        private void ApplyWebSocketNetworkSetting(string url, string protocol, string nickname, Vector2Int streamSize, RTCRtpCodecCapability videoCodec)
-        {
-            WebRTCSetting.StreamSize = streamSize;
-            WebRTCSetting.VideoCodec = videoCodec;
-            WebSocketSetting.WebSocketURL = url;
-            WebSocketSetting.WebSocketProtocol = protocol;
-            UserProfileSetting.Nickname = nickname;
-
-            if(videoCodec != null)
-            {
-                Debug.Log($"The settings have been applied.\n" +
-                          $"URL : {WebSocketSetting.WebSocketURL}\n" +
-                          $"Protocol : {WebSocketSetting.WebSocketProtocol}\n" +
-                          $"Nickname : {UserProfileSetting.Nickname}\n" +
-                          $"Stream size : {WebRTCSetting.StreamSize}\n" +
-                          $"Video Codec : {WebRTCSetting.VideoCodec.mimeType} {WebRTCSetting.VideoCodec.sdpFmtpLine}");
-            }
-            else
-            {
-                Debug.Log($"The settings have been applied.\n" +
-                          $"URL : {WebSocketSetting.WebSocketURL}\n" +
-                          $"Protocol : {WebSocketSetting.WebSocketProtocol}\n" +
-                          $"Nickname : {UserProfileSetting.Nickname}\n" +
-                          $"Stream size : {WebRTCSetting.StreamSize}\n" +
-                          $"Video Codec : Default");
-            }
-
-
             if (webSocketHandler.IsNullWebSocket())
             {
                 return;

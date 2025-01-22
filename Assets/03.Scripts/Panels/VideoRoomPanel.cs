@@ -8,23 +8,31 @@ namespace MultiPartyWebRTC
 {
     public class VideoRoomPanel : MonoBehaviour
     {
+        [Header("GameObjects")]
+        [SerializeField] private GameObject localPeerObject;
+        [SerializeField] private GameObject remotePeerObject;
+
         [Header("Buttons")]
         [SerializeField] private Button handUpVideoRoomButton;
-        [SerializeField] private Button streamButton;
-        [SerializeField] private Button microphoneButton;
+
+        [Header("Toggles")]
+        [SerializeField] private Toggle streamToggle;
+        [SerializeField] private Toggle microphoneToggle;
 
         private void OnEnable()
         {
             handUpVideoRoomButton.onClick.AddListener(OnClickHangUpVideoRoom);
-            streamButton.onClick.AddListener(OnClickStream);
-            microphoneButton.onClick.AddListener(OnClickMicroPhone);
+
+            streamToggle.onValueChanged.AddListener(ChangeStreamState);
+            microphoneToggle.onValueChanged.AddListener(ChangeMicrophoneState);
         }
 
         private void OnDisable()
         {
             handUpVideoRoomButton.onClick.RemoveListener(OnClickHangUpVideoRoom);
-            streamButton.onClick.RemoveListener(OnClickStream);
-            microphoneButton.onClick.RemoveListener(OnClickMicroPhone);
+
+            streamToggle.onValueChanged.RemoveListener(ChangeStreamState);
+            microphoneToggle.onValueChanged.RemoveListener(ChangeMicrophoneState);
         }
 
         private void OnClickHangUpVideoRoom()
@@ -32,19 +40,8 @@ namespace MultiPartyWebRTC
             UIEvent.HangUpVideoRoomEvent?.Invoke();
         }
 
-        private void OnClickStream()
-        {
-            UIEvent.VideoRoomStreamClickEvent?.Invoke();
-        }
+        private void ChangeStreamState(bool isOn) => UIEvent.VideoRoomStreamToggleEvent?.Invoke(isOn);
 
-        private void OnClickMicroPhone()
-        {
-            UIEvent.VideoRoomMicrophoneClickEvent?.Invoke();
-        }
-
-        private void ChangeButtonStateColor(Image buttonImage)
-        {
-
-        }
+        private void ChangeMicrophoneState(bool isOn) => UIEvent.VideoRoomMicrophoneToggleEvent?.Invoke(isOn);
     }
 }

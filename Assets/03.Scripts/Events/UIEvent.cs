@@ -20,7 +20,7 @@ namespace MultiPartyWebRTC.Event
         public static Action BackConnectPanelEvent;
         public static Action EchoTestClickEvent;
         public static Action StreamingClickEvent;
-        public static Action VideoCallclickEvent;
+        public static Action VideoCallClickEvent;
         public static Action SIPGatewayClickEvent;
         public static Action VideoRoomClickEvent;
         public static Action VideoRoomMultiStreamClickEvent;
@@ -29,7 +29,7 @@ namespace MultiPartyWebRTC.Event
 
         // Video Room Panel Event
         public static Action HangUpVideoRoomEvent;
-        public static Action VideoRoomStreamClickEvent;
-        public static Action VideoRoomMicrophoneClickEvent;
+        public static Action<bool> VideoRoomStreamToggleEvent;
+        public static Action<bool> VideoRoomMicrophoneToggleEvent;
     }
 }

@@ -8,6 +8,7 @@ namespace MultiPartyWebRTC
 {
     public class ConnectPanel : MonoBehaviour
     {
+        [SerializeField] private Button backConnectPanelButton;
         [SerializeField] private Button echoTestButton;
         [SerializeField] private Button streamingButton;
         [SerializeField] private Button videoCallButton;
@@ -19,14 +20,17 @@ namespace MultiPartyWebRTC
 
         private void OnEnable()
         {
+            backConnectPanelButton.onClick.AddListener(OnClickBackConnectPanel);
             videoRoomButton.onClick.AddListener(OnClickVideoRoom);
         }
 
         private void OnDisable()
         {
+            backConnectPanelButton.onClick.RemoveListener(OnClickBackConnectPanel);
             videoRoomButton.onClick.RemoveListener(OnClickVideoRoom);
         }
 
+        private void OnClickBackConnectPanel() => UIEvent.BackConnectPanelEvent?.Invoke();
         private void OnClickVideoRoom() => UIEvent.VideoRoomClickEvent?.Invoke();
     }
 }
