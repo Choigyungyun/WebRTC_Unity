@@ -9,10 +9,17 @@ namespace MultiPartyWebRTC.Internal
     {
         public static readonly int Default_StreamWidth = 1920;
         public static readonly int Default_StreamHeight = 1080;
+        public const string Default_ICEServer_URL = "stun:stun.l.google.com:19302";
 
+        public static bool UseWebCam { get { return useWebCam; } set { useWebCam = value; } }
+        public static bool UseMicrophone { get { return useMicrophone; } set { useMicrophone = value; } }
+        public static string ICEServerURL { get { return iceURL; } set { iceURL = value; } }
         public static Vector2Int StreamSize { get { return streamSize; } set { streamSize = value; } }
         public static RTCRtpCodecCapability VideoCodec { get { return videoCodec; } set { videoCodec = value; } }
 
+        private static bool useWebCam = false;
+        private static bool useMicrophone = false;
+        private static string iceURL = string.Empty;
         private static Vector2Int streamSize = new Vector2Int(Default_StreamWidth, Default_StreamHeight);
         private static RTCRtpCodecCapability videoCodec = null;
     }

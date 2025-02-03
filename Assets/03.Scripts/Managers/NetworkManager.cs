@@ -7,18 +7,13 @@ using UnityEngine;
 
 namespace MultiPartyWebRTC
 {
-    public class NetworkManager : MonoBehaviour
+    public class NetworkManager : UniqueInstance<NetworkManager>
     {
         [SerializeField] private bool setDefaultValue = false;
 
-        private const string Default_ICEServerURL = "stun:stun.l.google.com:19302";
-
+        private NetworkManager instance;
         private WebSocketHandler webSocketHandler = new();
-
-        private void Awake()
-        {
-            DontDestroyOnLoad(this);
-        }
+        private Coroutine updateCoroutine;
 
         private void Start()
         {
@@ -26,6 +21,7 @@ namespace MultiPartyWebRTC
             {
                 webSocketHandler.SetDefaultWebSocket();
                 SetDefaultUserProfile();
+                updateCoroutine = StartCoroutine(WebRTC.Update());
             }
             else
             {
@@ -43,6 +39,7 @@ namespace MultiPartyWebRTC
 
             // Video Room Panel Evets
             UIEvent.HangUpVideoRoomEvent += webSocketHandler.DisconnectWebSocket;
+            UIEvent.HangUpVideoRoomEvent += StopUpdateWebRTC;
         }
 
         private void OnDisable()
@@ -52,11 +49,26 @@ namespace MultiPartyWebRTC
 
             // Video Room Panel Events
             UIEvent.HangUpVideoRoomEvent -= webSocketHandler.DisconnectWebSocket;
+            UIEvent.HangUpVideoRoomEvent -= StopUpdateWebRTC;
 
             webSocketHandler.DisconnectWebSocket();
+            StopUpdateWebRTC();
         }
 
-        private void SetDefaultUserProfile() => UserProfileSetting.Nickname = UserProfileSetting.Default_Nickname;
+        private void StopUpdateWebRTC()
+        {
+            if(updateCoroutine == null)
+            {
+                return;
+            }
+            StopCoroutine(updateCoroutine);
+            updateCoroutine = null;
+        }
+
+        private void SetDefaultUserProfile()
+        {
+            UserProfileSetting.Nickname = UserProfileSetting.Default_Nickname;
+        }
 
         private void ApplyWebSocketNetworkSetting()
         {

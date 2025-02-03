@@ -30,7 +30,14 @@ namespace MultiPartyWebRTC
             videoRoomButton.onClick.RemoveListener(OnClickVideoRoom);
         }
 
-        private void OnClickBackConnectPanel() => UIEvent.BackConnectPanelEvent?.Invoke();
-        private void OnClickVideoRoom() => UIEvent.VideoRoomClickEvent?.Invoke();
+        private void OnClickBackConnectPanel()
+        {
+            UIEvent.BackConnectPanelEvent?.Invoke();
+        }
+
+        private void OnClickVideoRoom()
+        {
+            UIEvent.VideoRoomClickEvent?.Invoke();
+        }
     }
 }

@@ -45,12 +45,24 @@ namespace MultiPartyWebRTC
 
         #region 이벤트 함수
         // Panel show
-        private void ShowSettingPanel() => PanelStackControl(settingPanel, true, false);
-        private void ShowConnectPanel() => PanelStackControl(connectPanel, true, true);
+        private void ShowSettingPanel()
+        {
+            PanelStackControl(settingPanel, true, false);
+        }
+        private void ShowConnectPanel()
+        {
+            PanelStackControl(connectPanel, true, true);
+        }
 
         // Panel hide
-        private void HideSettingPanel() => PanelStackControl(settingPanel, false, false);
-        private void HideConnectPanel() => PanelStackControl(connectPanel, false, false);
+        private void HideSettingPanel()
+        {
+            PanelStackControl(settingPanel, false, false);
+        }
+        private void HideConnectPanel()
+        {
+            PanelStackControl(connectPanel, false, false);
+        }
 
         #endregion
 
