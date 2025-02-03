@@ -35,9 +35,15 @@ namespace MultiPartyWebRTC
             quitButton.onClick.RemoveListener(OnClickQuit);
         }
 
-        private void OnClickVideoRoom() => UIEvent.ConnectClickEvent?.Invoke();
+        private void OnClickVideoRoom()
+        {
+            UIEvent.ConnectClickEvent?.Invoke();
+        }
 
-        private void OnClickSetting() => UIEvent.SettingClickEvent?.Invoke();
+        private void OnClickSetting()
+        {
+            UIEvent.SettingClickEvent?.Invoke();
+        }
 
         private void OnClickQuit()
         {

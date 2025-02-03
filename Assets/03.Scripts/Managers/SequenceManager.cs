@@ -1,3 +1,4 @@
+using MultiPartyWebRTC;
 using MultiPartyWebRTC.Event;
 using System.Collections;
 using System.Collections.Generic;
@@ -17,16 +18,11 @@ public enum SceneType
     AudioBridgeScene,
     TextARoomScene,
 }
-public class SequenceManager : MonoBehaviour
+public class SequenceManager : UniqueInstance<SequenceManager>
 {
     [SerializeField] private GameObject[] canvases;
 
     private GameObject currentCanvas;
-
-    private void Awake()
-    {
-        DontDestroyOnLoad(this);
-    }
 
     private void Start()
     {
@@ -46,6 +42,8 @@ public class SequenceManager : MonoBehaviour
         UIEvent.VideoRoomMultiStreamClickEvent += LoadMVideoRoom;
         UIEvent.AudioBridgeClickEvent += LoadAudioBridge;
         UIEvent.TextRoomClickEvent += LoadTextRoom;
+
+        UIEvent.HangUpVideoRoomEvent += LoadMain;
     }
 
     private void OnDisable()
@@ -58,6 +56,8 @@ public class SequenceManager : MonoBehaviour
         UIEvent.VideoRoomMultiStreamClickEvent -= LoadMVideoRoom;
         UIEvent.AudioBridgeClickEvent -= LoadAudioBridge;
         UIEvent.TextRoomClickEvent -= LoadTextRoom;
+
+        UIEvent.HangUpVideoRoomEvent -= LoadMain;
     }
 
     private void LoadScene(SceneType scene)
@@ -128,9 +128,10 @@ public class SequenceManager : MonoBehaviour
         }
 
         // 기존 Canvas 제거
-        if (currentCanvas != null)
+        if (TryCheckSameCanavsInScene())
         {
             Destroy(currentCanvas);
+            Debug.Log(currentCanvas.name);
         }
 
         // 새로운 Canvas 인스턴스화
@@ -138,15 +139,62 @@ public class SequenceManager : MonoBehaviour
         return true;
     }
 
+    private bool TryCheckSameCanavsInScene()
+    {
+        if(currentCanvas == null)
+        {
+            return false;
+        }
+        else
+        {
+            if (GameObject.Find(currentCanvas.name))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+    }
+
     #region 씬 로드 함수
-    private void LoadMain() => LoadScene(SceneType.MainScene);
-    private void LoadEchoTest() => LoadScene(SceneType.EchoTestRoomScene);
-    private void LoadStreaming() => LoadScene(SceneType.StreamingScene);
-    private void LoadVideoCall() => LoadScene(SceneType.VideoCallScene);
-    private void LoadSIPGateway() => LoadScene(SceneType.SIPGatewayScene);
-    private void LoadVideoRoom() => LoadScene(SceneType.VideoRoomScene);
-    private void LoadMVideoRoom() => LoadScene(SceneType.M_VideoRoomScene);
-    private void LoadAudioBridge() => LoadScene(SceneType.AudioBridgeScene);
-    private void LoadTextRoom() => LoadScene(SceneType.TextARoomScene);
+    private void LoadMain()
+    {
+        LoadScene(SceneType.MainScene);
+    }
+    private void LoadEchoTest()
+    {
+        LoadScene(SceneType.EchoTestRoomScene);
+    }
+    private void LoadStreaming()
+    {
+        LoadScene(SceneType.StreamingScene);
+    }
+    private void LoadVideoCall()
+    {
+        LoadScene(SceneType.VideoCallScene);
+    }
+    private void LoadSIPGateway()
+    {
+        LoadScene(SceneType.SIPGatewayScene);
+    }
+    private void LoadVideoRoom()
+    {
+        LoadScene(SceneType.VideoRoomScene);
+    }
+    private void LoadMVideoRoom()
+    {
+        LoadScene(SceneType.M_VideoRoomScene);
+    }
+    private void LoadAudioBridge()
+    {
+        LoadScene(SceneType.AudioBridgeScene);
+    }
+    private void LoadTextRoom()
+    {
+        LoadScene(SceneType.TextARoomScene);
+    }
     #endregion
 }
