@@ -40,14 +40,8 @@ namespace MultiPartyWebRTC
             UIEvent.HangUpVideoRoomEvent?.Invoke();
         }
 
-        private void ChangeStreamState(bool isOn)
-        {
-            UIEvent.VideoRoomStreamToggleEvent?.Invoke(isOn);
-        }
+        private void ChangeStreamState(bool isOn) => UIEvent.VideoRoomStreamToggleEvent?.Invoke(isOn);
 
-        private void ChangeMicrophoneState(bool isOn)
-        {
-            UIEvent.VideoRoomMicrophoneToggleEvent?.Invoke(isOn);
-        }
+        private void ChangeMicrophoneState(bool isOn) => UIEvent.VideoRoomMicrophoneToggleEvent?.Invoke(isOn);
     }
 }

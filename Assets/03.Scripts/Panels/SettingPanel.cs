@@ -238,12 +238,10 @@ namespace MultiPartyWebRTC
             }
         }
 
-        private bool ValidateStreamSizeInputs()
-        {
-            return !streamSizeWidthInputField.interactable ||
-                   !streamSizeHeightInputField.interactable ||
-                   (!string.IsNullOrEmpty(streamSizeWidthInputField.text) && !string.IsNullOrEmpty(streamSizeHeightInputField.text));
-        }
+        private bool ValidateStreamSizeInputs() =>
+            !streamSizeWidthInputField.interactable ||
+            !streamSizeHeightInputField.interactable ||
+            (!string.IsNullOrEmpty(streamSizeWidthInputField.text) && !string.IsNullOrEmpty(streamSizeHeightInputField.text));
 
         private void ResetStreamSizeInputs()
         {
@@ -272,32 +270,22 @@ namespace MultiPartyWebRTC
             nicknameInputField.text = string.Empty;
         }
 
-        private Vector2Int GetSelectedStreamSize()
-        {
-            return streamSizeDropdown.value == 0
-                   ? new Vector2Int(int.Parse(streamSizeWidthInputField.text), int.Parse(streamSizeHeightInputField.text))
-                   : streamSizeList[streamSizeDropdown.value - 1];
-        }
+        private Vector2Int GetSelectedStreamSize() =>
+            streamSizeDropdown.value == 0
+                ? new Vector2Int(int.Parse(streamSizeWidthInputField.text), int.Parse(streamSizeHeightInputField.text))
+                : streamSizeList[streamSizeDropdown.value - 1];
 
-        private RTCRtpCodecCapability GetSelectedCodec()
-        {
-            return codecSelectDropdown.value == 0 ? null : availableCodecs[codecSelectDropdown.value - 1];
-        }
+        private RTCRtpCodecCapability GetSelectedCodec() =>
+            codecSelectDropdown.value == 0 ? null : availableCodecs[codecSelectDropdown.value - 1];
 
-        private string SaveTextField(TMP_Text textField, string input)
-        {
-            return string.IsNullOrEmpty(input) ? textField.text : (textField.text = input);
-        }
+        private string SaveTextField(TMP_Text textField, string input) =>
+            string.IsNullOrEmpty(input) ? textField.text : (textField.text = input);
 
-        private void CheckForChanges(int currentIndex, int newIndex)
-        {
+        private void CheckForChanges(int currentIndex, int newIndex) =>
             applySettingButton.interactable = currentIndex != newIndex;
-        }
 
-        private void OnInputValueChanged(string value)
-        {
+        private void OnInputValueChanged(string value) =>
             applySettingButton.interactable = !string.IsNullOrEmpty(value);
-        }
 
         private void DisplayStateText(string message, Color color)
         {
@@ -305,10 +293,8 @@ namespace MultiPartyWebRTC
             stateApplyText.color = color;
         }
 
-        private void ResetStateText()
-        {
+        private void ResetStateText() =>
             stateApplyText.text = string.Empty;
-        }
         #endregion
     }
 }
