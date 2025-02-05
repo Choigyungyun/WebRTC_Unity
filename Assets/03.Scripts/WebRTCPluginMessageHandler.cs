@@ -25,7 +25,7 @@ namespace MultiPartyWebRTC.Handler
         private string plugin = string.Empty;
         private string pluginOpaque = string.Empty;
 
-        public void OnPluginMessage(PluginType plugin, PeerType peer)
+        public void OnPluginMessage(PluginType plugin)
         {
             switch (plugin)
             {
@@ -55,19 +55,6 @@ namespace MultiPartyWebRTC.Handler
                     break;
                 default:
                     break;
-            }
-
-            Debug.Log($"Client Message : Attaching the selected plug-in is complete...\n" +
-                      $"Plugin : {this.plugin}\n" +
-                      $"Plugin Opaque : {pluginOpaque}");
-
-            if (peer.Equals(PeerType.LocalPeer))
-            {
-
-            }
-            else
-            {
-
             }
         }
 

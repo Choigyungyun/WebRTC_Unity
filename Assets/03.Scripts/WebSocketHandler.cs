@@ -1,10 +1,6 @@
-using MultiPartyWebRTC.Event;
 using MultiPartyWebRTC.Internal;
+using Newtonsoft.Json.Linq;
 using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using UnityEditor.Timeline.Actions;
 using UnityEngine;
 using WebSocketSharp;
 
@@ -12,15 +8,9 @@ namespace MultiPartyWebRTC.Handler
 {
     public class WebSocketHandler
     {
-        private ConcurrentQueue<string> messageDefendQueue = new();
+        public event Action<JObject> OnMessageReceive;
         
         private WebSocket webSocket;
-        
-        public void SetDefaultWebSocket()
-        {
-            WebSocketSetting.WebSocketURL = WebSocketSetting.Default_URL;
-            WebSocketSetting.WebSocketProtocol = WebSocketSetting.Default_Protocol;
-        }
 
         public void ConnectWebSocket()
         {
@@ -34,8 +24,7 @@ namespace MultiPartyWebRTC.Handler
             {
                 return;
             }
-            webSocket.Close();
-            DetachWebSocketHandlers();
+            ClearAllWebSocket();
         }
 
         public bool IsNullWebSocket()
@@ -96,7 +85,7 @@ namespace MultiPartyWebRTC.Handler
         {
             Debug.Log("WebSocket Message: \n" + e.Data);
 
-            messageDefendQueue.Enqueue(e.Data);
+            OnMessageReceive?.Invoke(JObject.Parse(e.Data));
         }
 
         private void WebSocketOnError(object sender, ErrorEventArgs e)

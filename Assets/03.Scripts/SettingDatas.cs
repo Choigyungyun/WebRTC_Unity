@@ -5,10 +5,12 @@ using UnityEngine;
 
 namespace MultiPartyWebRTC.Internal
 {
-    internal static class WebRTCSetting
+    internal class WebRTCSetting
     {
-        public static readonly int Default_StreamWidth = 1920;
-        public static readonly int Default_StreamHeight = 1080;
+        public const bool Default_UseWebCam = false;
+        public const bool Default_UseMicrophone = false;
+        public const int Default_StreamWidth = 1920;
+        public const int Default_StreamHeight = 1080;
         public const string Default_ICEServer_URL = "stun:stun.l.google.com:19302";
 
         public static bool UseWebCam { get { return useWebCam; } set { useWebCam = value; } }
@@ -24,7 +26,7 @@ namespace MultiPartyWebRTC.Internal
         private static RTCRtpCodecCapability videoCodec = null;
     }
 
-    internal static class WebSocketSetting
+    internal class WebSocketSetting
     {
         /// <summary>
         /// 기본값 WebSocket URL 설정
@@ -49,7 +51,7 @@ namespace MultiPartyWebRTC.Internal
         private static string socketProtocol = string.Empty;
     }
 
-    internal static class UserProfileSetting
+    internal class UserProfileSetting
     {
         public const string Default_Nickname = "User";
 
@@ -57,7 +59,7 @@ namespace MultiPartyWebRTC.Internal
         private static string nickname = string.Empty;
     }
 
-    public class InternalDatas
+    public class SettingDatas
     {
     }
 }

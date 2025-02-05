@@ -11,17 +11,17 @@ namespace MultiPartyWebRTC
     {
         [SerializeField] private bool setDefaultValue = false;
 
-        private NetworkManager instance;
         private WebSocketHandler webSocketHandler = new();
+        private MessageHandler messageHandler = null;
         private Coroutine updateCoroutine;
 
         private void Start()
         {
             if (setDefaultValue)
             {
-                webSocketHandler.SetDefaultWebSocket();
+                SetDefaultWebSocketSetting();
+                SetDefaultWebRTCSetting();
                 SetDefaultUserProfile();
-                updateCoroutine = StartCoroutine(WebRTC.Update());
             }
             else
             {
@@ -31,44 +31,63 @@ namespace MultiPartyWebRTC
 
         private void OnEnable()
         {
-            // Home Panel Events
-            UIEvent.ConnectClickEvent += webSocketHandler.ConnectWebSocket;
-
-            // Setting Panel Events
-            UIEvent.ApplySettingClickEvent += ApplyWebSocketNetworkSetting;
-
-            // Video Room Panel Evets
-            UIEvent.HangUpVideoRoomEvent += webSocketHandler.DisconnectWebSocket;
-            UIEvent.HangUpVideoRoomEvent += StopUpdateWebRTC;
+            AddEvents();
         }
 
         private void OnDisable()
         {
-            // Home Panel Events
-            UIEvent.ConnectClickEvent -= webSocketHandler.ConnectWebSocket;
+            RemoveEvents();
 
-            // Video Room Panel Events
-            UIEvent.HangUpVideoRoomEvent -= webSocketHandler.DisconnectWebSocket;
-            UIEvent.HangUpVideoRoomEvent -= StopUpdateWebRTC;
+            StopUpdateWebRTC();
 
             webSocketHandler.DisconnectWebSocket();
-            StopUpdateWebRTC();
         }
 
-        private void StopUpdateWebRTC()
+        #region 이벤트
+        private void AddEvents()
         {
-            if(updateCoroutine == null)
-            {
-                return;
-            }
-            StopCoroutine(updateCoroutine);
-            updateCoroutine = null;
+            // Home Panel Events
+            UIEvent.ConnectClickEvent += webSocketHandler.ConnectWebSocket;
+            UIEvent.BackConnectPanelEvent += webSocketHandler.DisconnectWebSocket;
+
+            // Setting Panel Events
+            UIEvent.ApplySettingClickEvent += ApplyWebSocketNetworkSetting;
+
+            // Connect Panel Events
+            UIEvent.VideoRoomClickEvent += StartUpdateWebRTC;
+            UIEvent.VideoRoomClickEvent += SetVideoRoomPlugin;
+
+            // Video Room Panel Evets
+            UIEvent.HangUpVideoRoomEvent += StopUpdateWebRTC;
+            UIEvent.HangUpVideoRoomEvent += webSocketHandler.DisconnectWebSocket;
+        }
+        private void RemoveEvents()
+        {
+            // Home Panel Events
+            UIEvent.ConnectClickEvent -= webSocketHandler.ConnectWebSocket;
+            UIEvent.BackConnectPanelEvent -= webSocketHandler.DisconnectWebSocket;
+
+            //Setting Panel Events
+            UIEvent.ApplySettingClickEvent -= ApplyWebSocketNetworkSetting;
+
+            // Connect Panel Events
+            UIEvent.VideoRoomClickEvent -= StartUpdateWebRTC;
+            UIEvent.VideoRoomClickEvent -= SetVideoRoomPlugin;
+
+            // Video Room Panel Events
+            UIEvent.HangUpVideoRoomEvent -= StopUpdateWebRTC;
+            UIEvent.HangUpVideoRoomEvent -= webSocketHandler.DisconnectWebSocket;
         }
 
-        private void SetDefaultUserProfile()
+        private void AddMessageEvent()
         {
-            UserProfileSetting.Nickname = UserProfileSetting.Default_Nickname;
+
         }
+        private void RemoveMessageEvet()
+        {
+
+        }
+        #endregion
 
         private void ApplyWebSocketNetworkSetting()
         {
@@ -79,5 +98,58 @@ namespace MultiPartyWebRTC
 
             webSocketHandler.ClearAllWebSocket();
         }
+
+        // WebRTC 함수
+        private void StartUpdateWebRTC()
+        {
+            if(updateCoroutine != null)
+            {
+                return;
+            }
+            updateCoroutine = StartCoroutine(WebRTC.Update());
+
+            messageHandler = new MessageHandler();
+            AddMessageEvent();
+
+            Debug.Log("WebRTC update start!");
+        }
+        private void StopUpdateWebRTC()
+        {
+            if(updateCoroutine == null)
+            {
+                return;
+            }
+            StopCoroutine(updateCoroutine);
+            updateCoroutine = null;
+
+            RemoveMessageEvet();
+            messageHandler = null;
+
+            Debug.Log("Stop WebRTC update.");
+        }
+
+        // Message Handler 함수
+        private void SetVideoRoomPlugin()
+        {
+            messageHandler.SetPlugin(PluginType.VideoRoom);
+        }
+
+        #region 기본값 설정
+        private void SetDefaultWebSocketSetting()
+        {
+            WebSocketSetting.WebSocketURL = WebSocketSetting.Default_URL;
+            WebSocketSetting.WebSocketProtocol = WebSocketSetting.Default_Protocol;
+        }
+        private void SetDefaultWebRTCSetting()
+        {
+            WebRTCSetting.UseWebCam = WebRTCSetting.Default_UseWebCam;
+            WebRTCSetting.UseMicrophone = WebRTCSetting.Default_UseMicrophone;
+            WebRTCSetting.ICEServerURL = WebRTCSetting.Default_ICEServer_URL;
+        }
+        private void SetDefaultUserProfile()
+        {
+            UserProfileSetting.Nickname = UserProfileSetting.Default_Nickname;
+        }
+        #endregion
     }
 }

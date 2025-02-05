@@ -27,7 +27,13 @@ namespace MultiPartyWebRTC.Handler
     public class MessageHandler
     {
         public string SessionID { get { return sessionID; } set { sessionID = value; } }
-
         private string sessionID = string.Empty;
+
+        private WebRTCPluginMessageHandler pluginMessageHandler = new();
+
+        public void SetPlugin(PluginType plugin)
+        {
+            pluginMessageHandler.OnPluginMessage(plugin);
+        }
     }
 }
