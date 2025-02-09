@@ -10,6 +10,10 @@ namespace MultiPartyWebRTC.Handler
 {
     public class LocalPeerMessageHandler
     {
+        public void LocalMessageInteraction()
+        {
+        }
+
         //public void OnLocalMessageProperty(MessageType message)
         //{
         //    object msg = null;
@@ -25,7 +29,7 @@ namespace MultiPartyWebRTC.Handler
         //                transaction = RandomStringUtility.GenerateRandomString(10)
         //            };
 
-        //            DataEvent.onMessageResponse?.Invoke(msg);
+        //            DataEvent.OnMessageResponse?.Invoke(msg);
         //            break;
         //        case MessageType.Attach:
         //            msg = new

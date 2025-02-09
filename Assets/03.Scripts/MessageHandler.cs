@@ -1,3 +1,5 @@
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -18,6 +20,8 @@ namespace MultiPartyWebRTC.Handler
         Update,
         Attach,
         Message,
+        Publisher,
+        Subscriber,
         LocalMessage,
         RemoteMessage,
         Trickle,
@@ -26,14 +30,31 @@ namespace MultiPartyWebRTC.Handler
 
     public class MessageHandler
     {
-        public string SessionID { get { return sessionID; } set { sessionID = value; } }
-        private string sessionID = string.Empty;
+        public event Action<object> OnMessageResponse;
+
+        Dictionary<string, object> websocketParameters = new();
 
         private WebRTCPluginMessageHandler pluginMessageHandler = new();
+        private MessageProcessor messageProcessor = new();
+
+        public void HandleMessage(MessageType messageType)
+        {
+            IMessageProcessor processor = messageProcessor.GetProcessor(messageType);
+            object message = processor.ProcessMessage(websocketParameters);
+
+            OnMessageResponse?.Invoke(message);
+        }
 
         public void SetPlugin(PluginType plugin)
         {
-            pluginMessageHandler.OnPluginMessage(plugin);
+            (string, object) parameter = pluginMessageHandler.OnPluginMessage(plugin);
+
+            websocketParameters[parameter.Item1] = parameter.Item2;
+        }
+
+        public void MessageReceive(JObject data)
+        {
+
         }
     }
 }

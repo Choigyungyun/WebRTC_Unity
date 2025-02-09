@@ -81,11 +81,11 @@ namespace MultiPartyWebRTC
 
         private void AddMessageEvent()
         {
-
+            webSocketHandler.OnMessageReceive += messageHandler.MessageReceive;
         }
         private void RemoveMessageEvet()
         {
-
+            webSocketHandler.OnMessageReceive -= messageHandler.MessageReceive;
         }
         #endregion
 

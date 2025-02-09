@@ -25,43 +25,29 @@ namespace MultiPartyWebRTC.Handler
         private string plugin = string.Empty;
         private string pluginOpaque = string.Empty;
 
-        public void OnPluginMessage(PluginType plugin)
+        public (string, object) OnPluginMessage(PluginType plugin)
         {
             switch (plugin)
             {
                 case PluginType.EchoTest:
-                    SetPlugin("janus.plugin.echotest", "");
-                    break;
+                    return ("janus.plugin.echotest", "");
                 case PluginType.Streaming:
-                    SetPlugin("janus.plugin.audiobridge", "");
-                    break;
+                    return ("janus.plugin.audiobridge", "");
                 case PluginType.VideoCall:
-                    SetPlugin("janus.plugin.videocall", "");
-                    break;
+                    return ("jreturn anus.plugin.videocall", "");
                 case PluginType.SIPGateway:
-                    SetPlugin("janus.plugin.sip", "");
-                    break;
+                    return ("janus.plugin.sip", "");
                 case PluginType.VideoRoom:
-                    SetPlugin("janus.plugin.videoroom", "videoroomtest-");
-                    break;
+                    return ("janus.plugin.videoroom", "videoroomtest-");
                 case PluginType.VideoRoom_MultiStream:
-                    SetPlugin("janus.plugin.mvideoroom", "");
-                    break;
+                    return ("janus.plugin.mvideoroom", "");
                 case PluginType.AudioBridge:
-                    SetPlugin("janus.plugin.audiobridge", "");
-                    break;
+                    return ("janus.plugin.audiobridge", "");
                 case PluginType.TextRoom:
-                    SetPlugin("janus.plugin.textroom", "");
-                    break;
+                    return ("janus.plugin.textroom", "");
                 default:
-                    break;
+                    return (null, null);
             }
-        }
-
-        private void SetPlugin(string plugin, string opaque)
-        {
-            this.plugin = plugin;
-            pluginOpaque = opaque;
         }
     }
 }

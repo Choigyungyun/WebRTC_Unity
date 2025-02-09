@@ -28,7 +28,7 @@ namespace MultiPartyWebRTC.Peer
         {
             nicknameText.text = UserProfileSetting.Nickname;
             CaptureAudioStart();
-            //StartCoroutine(CaptureVideoStart());
+            StartCoroutine(CaptureVideoStart());
         }
 
         protected override void Call()
