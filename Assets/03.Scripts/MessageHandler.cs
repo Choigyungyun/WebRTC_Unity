@@ -32,18 +32,12 @@ namespace MultiPartyWebRTC.Handler
     {
         public event Action<object> OnMessageResponse;
 
-        Dictionary<string, object> websocketParameters = new();
+        private MessageType messageType = MessageType.None;
 
+        private Dictionary<string, object> websocketParameters = new();
         private WebRTCPluginMessageHandler pluginMessageHandler = new();
         private MessageProcessor messageProcessor = new();
-
-        public void HandleMessage(MessageType messageType)
-        {
-            IMessageProcessor processor = messageProcessor.GetProcessor(messageType);
-            object message = processor.ProcessMessage(websocketParameters);
-
-            OnMessageResponse?.Invoke(message);
-        }
+        private MessageClassifier messageClassifier = new();
 
         public void SetPlugin(PluginType plugin)
         {
@@ -52,9 +46,19 @@ namespace MultiPartyWebRTC.Handler
             websocketParameters[parameter.Item1] = parameter.Item2;
         }
 
+        public void HandleMessage(MessageType type)
+        {
+            messageType = type;
+
+            IMessageProcessor processor = messageProcessor.GetProcessor(type);
+            object message = processor.ProcessMessage(websocketParameters);
+
+            OnMessageResponse?.Invoke(message);
+        }
+
         public void MessageReceive(JObject data)
         {
-
+            IMessageClassifier classifer = messageClassifier.GetClassifer(messageType);
         }
     }
 }

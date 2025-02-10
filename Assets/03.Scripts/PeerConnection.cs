@@ -33,6 +33,11 @@ namespace MultiPartyWebRTC.Peer
             peerConnection.OnIceCandidate = OnIceCandidateDelegate;
         }
 
+        protected virtual void OnDisable()
+        {
+
+        }
+
         protected void InitializePeerConnection()
         {
             peerConnection = new RTCPeerConnection(ref configuration);

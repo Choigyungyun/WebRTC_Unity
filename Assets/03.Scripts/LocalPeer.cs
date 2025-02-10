@@ -1,3 +1,4 @@
+using MultiPartyWebRTC.Event;
 using MultiPartyWebRTC.Handler;
 using MultiPartyWebRTC.Internal;
 using System.Collections;
@@ -10,8 +11,6 @@ namespace MultiPartyWebRTC.Peer
     public class LocalPeer : PeerConnection
     {
         [SerializeField] private AudioClip audioClip;
-
-        private LocalPeerMessageHandler localPeerMessageHandler = new();
 
         private VideoStreamTrack videoStreamTrack;
         private AudioStreamTrack audioStreamTrack;
@@ -29,11 +28,12 @@ namespace MultiPartyWebRTC.Peer
             nicknameText.text = UserProfileSetting.Nickname;
             CaptureAudioStart();
             StartCoroutine(CaptureVideoStart());
+            Call();
         }
 
         protected override void Call()
         {
-
+            DataEvent.InteractionPeerTypeEvent?.Invoke(PeerType.LocalPeer);
         }
 
         private IEnumerator CaptureVideoStart()
@@ -42,6 +42,7 @@ namespace MultiPartyWebRTC.Peer
             {
                 videoStreamTrack = Camera.main.CaptureStreamTrack(WebRTCSetting.StreamSize.x, WebRTCSetting.StreamSize.y);
                 videoDisplay.texture = Camera.main.targetTexture;
+
                 yield break;
             }
         }
