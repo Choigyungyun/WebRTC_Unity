@@ -1,3 +1,4 @@
+using MultiPartyWebRTC.Event;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -24,23 +25,18 @@ namespace MultiPartyWebRTC.Peer
 
         protected virtual void OnEnable()
         {
-            InitializePeerConnection();
-
-            OnIceConnectionChangeDelegate = state => OnIceConnectionChange(state);
-            OnIceCandidateDelegate = candidate => OnIceCandidate(candidate);
-
-            peerConnection.OnIceConnectionChange = OnIceConnectionChangeDelegate;
-            peerConnection.OnIceCandidate = OnIceCandidateDelegate;
         }
 
         protected virtual void OnDisable()
         {
-
         }
 
         protected void InitializePeerConnection()
         {
             peerConnection = new RTCPeerConnection(ref configuration);
+
+            OnIceConnectionChangeDelegate = OnIceConnectionChange;
+            OnIceCandidateDelegate = OnIceCandidate;
         }
 
         protected abstract void SetUp();
@@ -82,6 +78,9 @@ namespace MultiPartyWebRTC.Peer
         protected virtual void OnIceCandidate(RTCIceCandidate candidate)
         {
             peerConnection.AddIceCandidate(candidate);
+
+            DataEvent.OccurringCandidateEvent?.Invoke(candidate.Candidate);
+
             Debug.Log($"{gameObject.name} ICE Candidate Received: {candidate.Candidate}");
         }
 

@@ -17,7 +17,9 @@ namespace MultiPartyWebRTC.Peer
         {
             base.OnEnable();
 
+            InitializePeerConnection();
 
+            SetUp();
         }
 
         protected override void SetUp()
@@ -27,7 +29,7 @@ namespace MultiPartyWebRTC.Peer
 
         protected override void Call()
         {
-            throw new System.NotImplementedException();
+
         }
 
         private IEnumerator SetRemoteDescription(RTCPeerConnection peer, RTCSessionDescription desk)

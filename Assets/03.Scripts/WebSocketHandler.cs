@@ -1,4 +1,5 @@
 using MultiPartyWebRTC.Internal;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using UnityEngine;
@@ -25,6 +26,12 @@ namespace MultiPartyWebRTC.Handler
                 return;
             }
             ClearAllWebSocket();
+        }
+
+        public void SendMessage(object message)
+        {
+            string data = JsonConvert.SerializeObject(message);
+            webSocket.Send(data);
         }
 
         public bool IsNullWebSocket()

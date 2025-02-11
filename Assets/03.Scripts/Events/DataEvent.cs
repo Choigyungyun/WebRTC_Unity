@@ -15,6 +15,9 @@ namespace MultiPartyWebRTC.Event
         public static Action<MessageType> LocalMessagePropertyEvent;
         public static Action<MessageType> RemoteMessagePropertyEvent;
 
-        public static Action<object> OnMessageResponse;
+        public static Action<object> OnMessageResponseEvent;
+
+        public static Action<string, object> OfferSDPEvent;
+        public static Action<string> OccurringCandidateEvent;
     }
 }

@@ -1,3 +1,5 @@
+using MultiPartyWebRTC.Event;
+using MultiPartyWebRTC.Utility;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
@@ -19,13 +21,21 @@ namespace MultiPartyWebRTC.Handler
         Create,
         Update,
         Attach,
-        Message,
-        Publisher,
-        Subscriber,
-        LocalMessage,
-        RemoteMessage,
+        Join_Publisher,
+        Join_Subscriber,
+        Start,
+        Configure,
         Trickle,
         KeepAlive
+    }
+
+    public enum ResponseType
+    {
+        None = 0,
+        Ack,
+        Event,
+        TimeOut,
+        HangUp
     }
 
     public class MessageHandler
@@ -35,9 +45,21 @@ namespace MultiPartyWebRTC.Handler
         private MessageType messageType = MessageType.None;
 
         private Dictionary<string, object> websocketParameters = new();
+        private Dictionary<string, List<string>> RemoteCandidate = new();
+        private List<string> localCandidate = new();
         private WebRTCPluginMessageHandler pluginMessageHandler = new();
         private MessageProcessor messageProcessor = new();
         private MessageClassifier messageClassifier = new();
+
+        public void AddEvents()
+        {
+            DataEvent.OccurringCandidateEvent += SetLocalCandidate;
+        }
+
+        public void RemoveEvents()
+        {
+            DataEvent.OccurringCandidateEvent -= SetLocalCandidate;
+        }
 
         public void SetPlugin(PluginType plugin)
         {
@@ -58,7 +80,15 @@ namespace MultiPartyWebRTC.Handler
 
         public void MessageReceive(JObject data)
         {
-            IMessageClassifier classifer = messageClassifier.GetClassifer(messageType);
+            IMessageClassifier classifier = messageClassifier.GetClassifier(data);
+            (string, object) parameter = classifier.ClassifierMessage(data);
+
+            websocketParameters[parameter.Item1] = parameter.Item2;
+        }
+
+        private void SetLocalCandidate(string candidate)
+        {
+            localCandidate.Add(candidate);
         }
     }
 }

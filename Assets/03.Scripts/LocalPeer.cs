@@ -3,6 +3,7 @@ using MultiPartyWebRTC.Handler;
 using MultiPartyWebRTC.Internal;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.WebRTC;
 using UnityEngine;
 
@@ -12,13 +13,16 @@ namespace MultiPartyWebRTC.Peer
     {
         [SerializeField] private AudioClip audioClip;
 
+        private List<RTCRtpSender> peerSenders = new();
         private VideoStreamTrack videoStreamTrack;
         private AudioStreamTrack audioStreamTrack;
-        private DelegateOnNegotiationNeeded onNegotiationNeeded;
+        private DelegateOnNegotiationNeeded OnNegotiationNeeded;
 
         protected override void OnEnable()
         {
             base.OnEnable();
+
+            InitializePeerConnection();
 
             SetUp();
         }
@@ -26,14 +30,38 @@ namespace MultiPartyWebRTC.Peer
         protected override void SetUp()
         {
             nicknameText.text = UserProfileSetting.Nickname;
+
+            OnNegotiationNeeded = () => { StartCoroutine(PeerNegotiationNeeded(peerConnection)); };
+
+            peerConnection.OnIceConnectionChange = OnIceConnectionChangeDelegate;
+            peerConnection.OnIceCandidate = OnIceCandidateDelegate;
+            peerConnection.OnNegotiationNeeded = OnNegotiationNeeded;
+
             CaptureAudioStart();
             StartCoroutine(CaptureVideoStart());
+
             Call();
         }
 
         protected override void Call()
         {
+            AddTracks();
+
             DataEvent.InteractionPeerTypeEvent?.Invoke(PeerType.LocalPeer);
+        }
+
+        private void AddTracks()
+        {
+            RTCRtpSender videoSender = peerConnection.AddTrack(videoStreamTrack);
+            peerSenders.Add(videoSender);
+            peerSenders.Add(peerConnection.AddTrack(audioStreamTrack));
+
+            if (WebRTCSetting.VideoCodec != null)
+            {
+                RTCRtpCodecCapability[] codecs = new[] { WebRTCSetting.VideoCodec };
+                RTCRtpTransceiver transceiver = peerConnection.GetTransceivers().First(t => t.Sender == videoSender);
+                transceiver.SetCodecPreferences(codecs);
+            }
         }
 
         private IEnumerator CaptureVideoStart()
