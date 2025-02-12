@@ -9,7 +9,13 @@ namespace MultiPartyWebRTC
 {
     public class NetworkManager : UniqueInstance<NetworkManager>
     {
+        [Header("Network Settings")]
         [SerializeField] private bool setDefaultValue = false;
+        [Space(10)]
+        [SerializeField] private float maxSessionTime = 0.0f;
+
+        private bool updateWebRTC = false;
+        private float time = 0.0f;
 
         private WebSocketHandler webSocketHandler = new();
         private MessageHandler messageHandler = null;
@@ -26,6 +32,21 @@ namespace MultiPartyWebRTC
             else
             {
 
+            }
+        }
+
+        private void Update()
+        {
+            if(updateWebRTC == false)
+            {
+                return;
+            }
+
+            time += Time.deltaTime;
+            if(time >= maxSessionTime)
+            {
+                messageHandler.KeepAliveSession();
+                time = 0.0f;
             }
         }
 
@@ -60,6 +81,8 @@ namespace MultiPartyWebRTC
             // Video Room Panel Evets
             UIEvent.HangUpVideoRoomEvent += StopUpdateWebRTC;
             UIEvent.HangUpVideoRoomEvent += webSocketHandler.DisconnectWebSocket;
+
+            DataEvent.OnMessageResponseEvent += webSocketHandler.SendMessage;
         }
         private void RemoveEvents()
         {
@@ -77,21 +100,8 @@ namespace MultiPartyWebRTC
             // Video Room Panel Events
             UIEvent.HangUpVideoRoomEvent -= StopUpdateWebRTC;
             UIEvent.HangUpVideoRoomEvent -= webSocketHandler.DisconnectWebSocket;
-        }
 
-        private void AddMessageEvent()
-        {
-            messageHandler.AddEvents();
-
-            webSocketHandler.OnMessageReceive += messageHandler.MessageReceive;
-            messageHandler.OnMessageResponse += webSocketHandler.SendMessage;
-        }
-        private void RemoveMessageEvet()
-        {
-            messageHandler.RemoveEvents();
-
-            webSocketHandler.OnMessageReceive -= messageHandler.MessageReceive;
-            messageHandler.OnMessageResponse -= webSocketHandler.SendMessage;
+            DataEvent.OnMessageResponseEvent -= webSocketHandler.SendMessage;
         }
         #endregion
 
@@ -113,11 +123,12 @@ namespace MultiPartyWebRTC
                 return;
             }
             updateCoroutine = StartCoroutine(WebRTC.Update());
+            Debug.Log("WebRTC update start!");
 
             messageHandler = new MessageHandler();
-            AddMessageEvent();
+            messageHandler.AddMessageEvent();
 
-            Debug.Log("WebRTC update start!");
+            updateWebRTC = true;
         }
         private void StopUpdateWebRTC()
         {
@@ -127,11 +138,12 @@ namespace MultiPartyWebRTC
             }
             StopCoroutine(updateCoroutine);
             updateCoroutine = null;
+            Debug.Log("Stop WebRTC update.");
 
-            RemoveMessageEvet();
+            messageHandler.RemoveMessageEvet();
             messageHandler = null;
 
-            Debug.Log("Stop WebRTC update.");
+            updateWebRTC = false;
         }
 
         // Message Handler ÇÔ¼ö

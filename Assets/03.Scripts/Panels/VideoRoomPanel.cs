@@ -28,11 +28,8 @@ namespace MultiPartyWebRTC
 
             streamToggle.onValueChanged.AddListener(ChangeStreamState);
             microphoneToggle.onValueChanged.AddListener(ChangeMicrophoneState);
-        }
 
-        private void Start()
-        {
-            InstanceLocalPeer();
+            UIEvent.CreateSessionEvent += InstanceLocalPeer;
         }
 
         private void OnDisable()
@@ -41,6 +38,8 @@ namespace MultiPartyWebRTC
 
             streamToggle.onValueChanged.RemoveListener(ChangeStreamState);
             microphoneToggle.onValueChanged.RemoveListener(ChangeMicrophoneState);
+
+            UIEvent.CreateSessionEvent -= InstanceLocalPeer;
 
             DestroyAllPeers();
         }

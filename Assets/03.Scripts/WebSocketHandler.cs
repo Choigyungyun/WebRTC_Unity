@@ -1,3 +1,4 @@
+using MultiPartyWebRTC.Event;
 using MultiPartyWebRTC.Internal;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -9,8 +10,6 @@ namespace MultiPartyWebRTC.Handler
 {
     public class WebSocketHandler
     {
-        public event Action<JObject> OnMessageReceive;
-        
         private WebSocket webSocket;
 
         public void ConnectWebSocket()
@@ -92,7 +91,7 @@ namespace MultiPartyWebRTC.Handler
         {
             Debug.Log("WebSocket Message: \n" + e.Data);
 
-            OnMessageReceive?.Invoke(JObject.Parse(e.Data));
+            DataEvent.OnMessageReceiveEvent?.Invoke(JObject.Parse(e.Data));
         }
 
         private void WebSocketOnError(object sender, ErrorEventArgs e)

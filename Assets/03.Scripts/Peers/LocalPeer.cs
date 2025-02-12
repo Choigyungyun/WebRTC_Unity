@@ -14,6 +14,7 @@ namespace MultiPartyWebRTC.Peer
         [SerializeField] private AudioClip audioClip;
 
         private List<RTCRtpSender> peerSenders = new();
+        private LocalPeerMessageHandler localPeerMessage = new();
         private VideoStreamTrack videoStreamTrack;
         private AudioStreamTrack audioStreamTrack;
         private DelegateOnNegotiationNeeded OnNegotiationNeeded;
@@ -46,8 +47,6 @@ namespace MultiPartyWebRTC.Peer
         protected override void Call()
         {
             AddTracks();
-
-            DataEvent.InteractionPeerTypeEvent?.Invoke(PeerType.LocalPeer);
         }
 
         private void AddTracks()

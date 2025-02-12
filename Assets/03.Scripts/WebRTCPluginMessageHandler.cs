@@ -19,7 +19,7 @@ namespace MultiPartyWebRTC.Handler
 
     public class WebRTCPluginMessageHandler
     {
-        public (string, object) OnPluginMessage(PluginType plugin)
+        public (string, string) OnPluginMessage(PluginType plugin)
         {
             switch (plugin)
             {
