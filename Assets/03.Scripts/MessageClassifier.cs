@@ -1,5 +1,8 @@
+using MultiPartyWebRTC.Event;
 using MultiPartyWebRTC.Handler;
 using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace MultiPartyWebRTC
@@ -79,7 +82,27 @@ namespace MultiPartyWebRTC
     {
         public (string, object) ClassifierMessage(JObject data)
         {
-            throw new System.NotImplementedException();
+            string janus = data["janus"].ToString();
+
+            if(janus == "event")
+            {
+                JArray jArray = (JArray)data["plugindata"]["data"]["publishers"];
+
+                Debug.Log($"Room number : {data["plugindata"]["data"]["room"]}\n" +
+                          $"Total Users : {jArray.Count}");
+
+                if (jArray.Count > 0)
+                {
+                    List<JObject> publishers = jArray.ToObject<List<JObject>>();
+
+                    foreach (JObject publisher in publishers)
+                    {
+                        Debug.Log($"Publisher data : {publisher}");
+                    }
+                }
+            }
+
+            return (null, null);
         }
     }
 

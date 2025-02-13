@@ -14,7 +14,7 @@ namespace MultiPartyWebRTC.Peer
         [SerializeField] private AudioClip audioClip;
 
         private List<RTCRtpSender> peerSenders = new();
-        private LocalPeerMessageHandler localPeerMessage = new();
+        private LocalPeerMessageHandler localPeerMessage;
         private VideoStreamTrack videoStreamTrack;
         private AudioStreamTrack audioStreamTrack;
         private DelegateOnNegotiationNeeded OnNegotiationNeeded;
@@ -23,13 +23,21 @@ namespace MultiPartyWebRTC.Peer
         {
             base.OnEnable();
 
-            InitializePeerConnection();
-
             SetUp();
+            localPeerMessage.AddEvents();
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+
+            localPeerMessage.RemoveEvents();
         }
 
         protected override void SetUp()
         {
+            localPeerMessage = new LocalPeerMessageHandler();
+
             nicknameText.text = UserProfileSetting.Nickname;
 
             OnNegotiationNeeded = () => { StartCoroutine(PeerNegotiationNeeded(peerConnection)); };

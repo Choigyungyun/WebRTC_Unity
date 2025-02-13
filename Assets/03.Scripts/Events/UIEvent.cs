@@ -28,7 +28,6 @@ namespace MultiPartyWebRTC.Event
         public static Action TextRoomClickEvent;
 
         // Video Room Panel Event
-        public static Action CreateSessionEvent;
         public static Action HangUpVideoRoomEvent;
         public static Action<bool> VideoRoomStreamToggleEvent;
         public static Action<bool> VideoRoomMicrophoneToggleEvent;

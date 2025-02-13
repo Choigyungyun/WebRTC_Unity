@@ -30,6 +30,23 @@ namespace MultiPartyWebRTC
             videoRoomButton.onClick.RemoveListener(OnClickVideoRoom);
         }
 
+        private void ActivatePluginButtons()
+        {
+            videoRoomButton.interactable = true;
+        }
+
+        private void DisablePluginButtons()
+        {
+            echoTestButton.interactable = false;
+            streamingButton.interactable = false;
+            videoCallButton.interactable = false;
+            sipGatewayButton.interactable = false;
+            videoRoomButton.interactable = false;
+            videoRoomMultiStreamButton.interactable = false;
+            audioBridgeButton.interactable = false;
+            textRoomButton.interactable = false;
+        }
+
         private void OnClickBackConnectPanel()
         {
             UIEvent.BackConnectPanelEvent?.Invoke();

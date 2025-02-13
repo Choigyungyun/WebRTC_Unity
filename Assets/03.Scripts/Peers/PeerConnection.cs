@@ -25,6 +25,7 @@ namespace MultiPartyWebRTC.Peer
 
         protected virtual void OnEnable()
         {
+            InitializePeerConnection();
         }
 
         protected virtual void OnDisable()

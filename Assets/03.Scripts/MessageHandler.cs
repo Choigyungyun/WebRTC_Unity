@@ -1,12 +1,8 @@
 using MultiPartyWebRTC.Event;
-using MultiPartyWebRTC.Internal;
-using MultiPartyWebRTC.Utility;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data.Common;
-using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
 
 namespace MultiPartyWebRTC.Handler
@@ -47,6 +43,7 @@ namespace MultiPartyWebRTC.Handler
 
         private MessageType messageType = MessageType.None;
 
+        private Dictionary<string, object> messageParameter = new();
         private WebRTCPluginMessageHandler pluginMessageHandler = new();
         private MessageProcessor messageProcessor = new();
         private MessageClassifier messageClassifier = new();
@@ -63,6 +60,8 @@ namespace MultiPartyWebRTC.Handler
         public void SetPlugin(PluginType type)
         {
             (string, string) parameter = pluginMessageHandler.OnPluginMessage(type);
+            messageParameter["plugin"] = parameter.Item1;
+            messageParameter["plugin_opaque"] = parameter.Item2;
 
             JanusDatas.PluginOption = parameter;
 
@@ -71,27 +70,7 @@ namespace MultiPartyWebRTC.Handler
                       $"Plugin opaque : {parameter.Item2}");
         }
 
-        public void KeepAliveSession()
-        {
-            IMessageProcessor processor = messageProcessor.GetProcessor(MessageType.KeepAlive);
-            (object, string) processorParameter = processor.ProcessMessage(null);
-
-            DataEvent.OnMessageResponseEvent?.Invoke(processorParameter.Item1);
-        }
-
-        public MessageHandler()
-        {
-            CreateSession();
-        }
-
-        private void ReceiveMessage(JObject data)
-        {
-            SetJanusData(data);
-
-            messageType = MessageType.None;
-        }
-
-        private void CreateSession()
+        public void CreateSession()
         {
             messageType = MessageType.Create;
 
@@ -100,24 +79,34 @@ namespace MultiPartyWebRTC.Handler
             transaction = processorParameter.Item2;
 
             DataEvent.OnMessageResponseEvent?.Invoke(processorParameter.Item1);
-            UIEvent.CreateSessionEvent?.Invoke();
         }
 
-        private void SetJanusData(JObject data)
+        public void KeepAliveSession()
+        {
+            IMessageProcessor processor = messageProcessor.GetProcessor(MessageType.KeepAlive);
+            (object, string) processorParameter = processor.ProcessMessage(messageParameter);
+
+            DataEvent.OnMessageResponseEvent?.Invoke(processorParameter.Item1);
+        }
+
+        private void ReceiveMessage(JObject data)
+        {
+            if (messageType != MessageType.Create)
+            {
+                return;
+            }
+
+            ClassifierMessage(data);
+            messageType = MessageType.None;
+        }
+
+        private void ClassifierMessage(JObject data)
         {
             IMessageClassifier classifier = messageClassifier.GetClassifier(messageType);
-            (string, object) parameter = classifier.ClassifierMessage(data);
+            (string key, object value) = classifier.ClassifierMessage(data);
 
-            switch (messageType)
-            {
-                case MessageType.None:
-                    break;
-                case MessageType.Create:
-                    JanusDatas.Session_ID = parameter.Item2.ToString();
-                    break;
-                default:
-                    break;
-            }
+            JanusDatas.Session_ID = value.ToString();
+            messageParameter["session_id"] = value;
         }
     }
 }

@@ -23,19 +23,19 @@ namespace MultiPartyWebRTC
 
         private void OnEnable()
         {
-            connectButton.onClick.AddListener(OnClickVideoRoom);
+            connectButton.onClick.AddListener(OnClickConnect);
             settingButton.onClick.AddListener(OnClickSetting);
             quitButton.onClick.AddListener(OnClickQuit);
         }
 
         private void OnDisable()
         {
-            connectButton.onClick.RemoveListener(OnClickVideoRoom);
+            connectButton.onClick.RemoveListener(OnClickConnect);
             settingButton.onClick.RemoveListener(OnClickSetting);
             quitButton.onClick.RemoveListener(OnClickQuit);
         }
 
-        private void OnClickVideoRoom()
+        private void OnClickConnect()
         {
             UIEvent.ConnectClickEvent?.Invoke();
         }

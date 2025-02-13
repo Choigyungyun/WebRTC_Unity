@@ -14,11 +14,11 @@ namespace MultiPartyWebRTC
         [Space(10)]
         [SerializeField] private float maxSessionTime = 0.0f;
 
-        private bool updateWebRTC = false;
+        private bool updateSession = false;
         private float time = 0.0f;
 
         private WebSocketHandler webSocketHandler = new();
-        private MessageHandler messageHandler = null;
+        private MessageHandler messageHandler = new();
         private Coroutine updateCoroutine;
 
         private void Start()
@@ -37,7 +37,7 @@ namespace MultiPartyWebRTC
 
         private void Update()
         {
-            if(updateWebRTC == false)
+            if(updateSession == false)
             {
                 return;
             }
@@ -68,8 +68,8 @@ namespace MultiPartyWebRTC
         private void AddEvents()
         {
             // Home Panel Events
-            UIEvent.ConnectClickEvent += webSocketHandler.ConnectWebSocket;
-            UIEvent.BackConnectPanelEvent += webSocketHandler.DisconnectWebSocket;
+            UIEvent.ConnectClickEvent += StartConnect;
+            UIEvent.BackConnectPanelEvent += StopConnect;
 
             // Setting Panel Events
             UIEvent.ApplySettingClickEvent += ApplyWebSocketNetworkSetting;
@@ -80,15 +80,14 @@ namespace MultiPartyWebRTC
 
             // Video Room Panel Evets
             UIEvent.HangUpVideoRoomEvent += StopUpdateWebRTC;
-            UIEvent.HangUpVideoRoomEvent += webSocketHandler.DisconnectWebSocket;
 
             DataEvent.OnMessageResponseEvent += webSocketHandler.SendMessage;
         }
         private void RemoveEvents()
         {
             // Home Panel Events
-            UIEvent.ConnectClickEvent -= webSocketHandler.ConnectWebSocket;
-            UIEvent.BackConnectPanelEvent -= webSocketHandler.DisconnectWebSocket;
+            UIEvent.ConnectClickEvent -= StartConnect;
+            UIEvent.BackConnectPanelEvent -= StopConnect;
 
             //Setting Panel Events
             UIEvent.ApplySettingClickEvent -= ApplyWebSocketNetworkSetting;
@@ -99,7 +98,6 @@ namespace MultiPartyWebRTC
 
             // Video Room Panel Events
             UIEvent.HangUpVideoRoomEvent -= StopUpdateWebRTC;
-            UIEvent.HangUpVideoRoomEvent -= webSocketHandler.DisconnectWebSocket;
 
             DataEvent.OnMessageResponseEvent -= webSocketHandler.SendMessage;
         }
@@ -115,6 +113,24 @@ namespace MultiPartyWebRTC
             webSocketHandler.ClearAllWebSocket();
         }
 
+        private void StartConnect()
+        {
+            webSocketHandler.ConnectWebSocket();
+
+            messageHandler.AddMessageEvent();
+            messageHandler.CreateSession();
+
+            updateSession = true;
+        }
+
+        private void StopConnect()
+        {
+            updateSession = false;
+
+            messageHandler.RemoveMessageEvet();
+            webSocketHandler.DisconnectWebSocket();
+        }
+
         // WebRTC 함수
         private void StartUpdateWebRTC()
         {
@@ -124,11 +140,6 @@ namespace MultiPartyWebRTC
             }
             updateCoroutine = StartCoroutine(WebRTC.Update());
             Debug.Log("WebRTC update start!");
-
-            messageHandler = new MessageHandler();
-            messageHandler.AddMessageEvent();
-
-            updateWebRTC = true;
         }
         private void StopUpdateWebRTC()
         {
@@ -139,11 +150,6 @@ namespace MultiPartyWebRTC
             StopCoroutine(updateCoroutine);
             updateCoroutine = null;
             Debug.Log("Stop WebRTC update.");
-
-            messageHandler.RemoveMessageEvet();
-            messageHandler = null;
-
-            updateWebRTC = false;
         }
 
         // Message Handler 함수

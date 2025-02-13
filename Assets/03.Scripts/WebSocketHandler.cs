@@ -29,6 +29,7 @@ namespace MultiPartyWebRTC.Handler
 
         public void SendMessage(object message)
         {
+            Debug.Log(message);
             string data = JsonConvert.SerializeObject(message);
             webSocket.Send(data);
         }
@@ -40,6 +41,11 @@ namespace MultiPartyWebRTC.Handler
 
         public void ClearAllWebSocket()
         {
+            if (webSocket == null)
+            {
+                return;
+            }
+
             webSocket.Close();
 
             DetachWebSocketHandlers();
@@ -64,7 +70,7 @@ namespace MultiPartyWebRTC.Handler
         #region WebScoket ¿Ã∫•∆Æ
         private void AttachWebSocketHandlers()
         {
-            webSocket.OnMessage += WebSocketOnOpen;
+            webSocket.OnOpen += WebSocketOnOpen;
             webSocket.OnMessage += WebSocketOnMessage;
             webSocket.OnError += WebSocketOnError;
             webSocket.OnClose += WebSocketOnClose;
@@ -97,6 +103,7 @@ namespace MultiPartyWebRTC.Handler
         private void WebSocketOnError(object sender, ErrorEventArgs e)
         {
             Debug.LogError("WebSocket Error: \n" + e.Message);
+            Debug.LogError($"WebSocket Error stack : {e.Exception.StackTrace}");
         }
 
         private void WebSocketOnClose(object sender, CloseEventArgs e)

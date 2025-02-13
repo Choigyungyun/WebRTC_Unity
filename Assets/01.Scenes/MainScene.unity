@@ -312,6 +312,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   setDefaultValue: 1
+  maxSessionTime: 29
 --- !u!4 &1362996163
 Transform:
   m_ObjectHideFlags: 0
