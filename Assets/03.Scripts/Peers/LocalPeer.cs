@@ -25,6 +25,9 @@ namespace MultiPartyWebRTC.Peer
 
             SetUp();
             localPeerMessage.AddEvents();
+
+
+            DataEvent.OnAwnserSDPReceiveEvent += HandleAnswerSDP;
         }
 
         protected override void OnDisable()
@@ -32,13 +35,13 @@ namespace MultiPartyWebRTC.Peer
             base.OnDisable();
 
             localPeerMessage.RemoveEvents();
+
+            DataEvent.OnAwnserSDPReceiveEvent -= HandleAnswerSDP;
         }
 
         protected override void SetUp()
         {
             localPeerMessage = new LocalPeerMessageHandler();
-
-            nicknameText.text = UserProfileSetting.Nickname;
 
             OnNegotiationNeeded = () => { StartCoroutine(PeerNegotiationNeeded(peerConnection)); };
 
@@ -46,15 +49,17 @@ namespace MultiPartyWebRTC.Peer
             peerConnection.OnIceCandidate = OnIceCandidateDelegate;
             peerConnection.OnNegotiationNeeded = OnNegotiationNeeded;
 
+            nicknameText.text = UserProfileSetting.Nickname;
+
             CaptureAudioStart();
             StartCoroutine(CaptureVideoStart());
 
-            Call();
+            AddTracks();
         }
 
-        protected override void Call()
+        protected override void OnIceCandidate(RTCIceCandidate candidate)
         {
-            AddTracks();
+            localPeerMessage.AddCandidates(candidate);
         }
 
         private void AddTracks()
@@ -118,6 +123,7 @@ namespace MultiPartyWebRTC.Peer
         private IEnumerator OnCreateOfferSuccess(RTCPeerConnection peer, RTCSessionDescription desc)
         {
             RTCSetSessionDescriptionAsyncOperation operation = peer.SetLocalDescription(ref desc);
+            localPeerMessage.SetLocalPeerSDP(desc.sdp);
             yield return operation;
 
             if (!operation.IsError)
@@ -131,14 +137,24 @@ namespace MultiPartyWebRTC.Peer
             }
         }
 
-        private IEnumerator SetRemoteDescription(RTCPeerConnection peer, RTCSessionDescription desc)
+        private void HandleAnswerSDP(string sdp)
         {
-            RTCSetSessionDescriptionAsyncOperation operation = peer.SetRemoteDescription(ref desc);
+            StartCoroutine(SetRemoteDescription(sdp));
+        }
+
+        private IEnumerator SetRemoteDescription(string answerSDP)
+        {
+            RTCSessionDescription desc = new RTCSessionDescription
+            {
+                type = RTCSdpType.Answer,
+                sdp = answerSDP,
+            };
+            RTCSetSessionDescriptionAsyncOperation operation = peerConnection.SetRemoteDescription(ref desc);
             yield return operation;
 
             if (!operation.IsError)
             {
-                OnSetRemoteSuccess(peer);
+                OnSetRemoteSuccess(peerConnection);
             }
             else
             {

@@ -24,6 +24,7 @@ namespace MultiPartyWebRTC.Handler
         Join_Subscriber,
         Start,
         Configure,
+        Completed,
         Trickle,
         KeepAlive
     }
@@ -78,7 +79,7 @@ namespace MultiPartyWebRTC.Handler
             (object, string) processorParameter = processor.ProcessMessage(null);
             transaction = processorParameter.Item2;
 
-            DataEvent.OnMessageResponseEvent?.Invoke(processorParameter.Item1);
+            DataEvent.OnMessageResponseEvent?.Invoke("Client", processorParameter.Item1);
         }
 
         public void KeepAliveSession()
@@ -86,7 +87,7 @@ namespace MultiPartyWebRTC.Handler
             IMessageProcessor processor = messageProcessor.GetProcessor(MessageType.KeepAlive);
             (object, string) processorParameter = processor.ProcessMessage(messageParameter);
 
-            DataEvent.OnMessageResponseEvent?.Invoke(processorParameter.Item1);
+            DataEvent.OnMessageResponseEvent?.Invoke("Client", processorParameter.Item1);
         }
 
         private void ReceiveMessage(JObject data)

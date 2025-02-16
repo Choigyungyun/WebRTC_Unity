@@ -1,6 +1,9 @@
 using MultiPartyWebRTC.Event;
+using MultiPartyWebRTC.Peer;
+using Newtonsoft.Json.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -29,6 +32,8 @@ namespace MultiPartyWebRTC
             streamToggle.onValueChanged.AddListener(ChangeStreamState);
             microphoneToggle.onValueChanged.AddListener(ChangeMicrophoneState);
 
+            DataEvent.OnRoomPublishersUpdateEvent += InstanceRemotePeer;
+
             InstanceLocalPeer();
         }
 
@@ -39,13 +44,27 @@ namespace MultiPartyWebRTC
             streamToggle.onValueChanged.RemoveListener(ChangeStreamState);
             microphoneToggle.onValueChanged.RemoveListener(ChangeMicrophoneState);
 
+            DataEvent.OnRoomPublishersUpdateEvent -= InstanceRemotePeer;
+
             DestroyAllPeers();
         }
 
         private void InstanceLocalPeer()
         {
-            GameObject localPeer = Instantiate(localPeerObject, peerContent);
-            localPeer.transform.SetSiblingIndex(0);
+            GameObject localPeerObject = Instantiate(this.localPeerObject, peerContent);
+            localPeerObject.transform.SetSiblingIndex(0);
+        }
+
+        private void InstanceRemotePeer(int totalPeers, List<JObject> publisherDatas)
+        {
+            for (int peerIndex = 0; peerIndex < totalPeers; peerIndex++)
+            {
+                GameObject remotePeerObject = Instantiate(this.remotePeerObject, peerContent);
+                RemotePeer remotePeer = remotePeerObject.GetComponent<RemotePeer>();
+
+                remotePeer.SetRemotePeer(publisherDatas[peerIndex]);
+            }
+            JanusDatas.TotalRemotePeers = totalPeers;
         }
 
         private void DestroyAllPeers()

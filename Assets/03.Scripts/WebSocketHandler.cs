@@ -3,6 +3,7 @@ using MultiPartyWebRTC.Internal;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Concurrent;
 using UnityEngine;
 using WebSocketSharp;
 
@@ -10,7 +11,8 @@ namespace MultiPartyWebRTC.Handler
 {
     public class WebSocketHandler
     {
-        private WebSocket webSocket;
+        private WebSocket websocket;
+        private ConcurrentQueue<JObject> messageQueue = new ();
 
         public void ConnectWebSocket()
         {
@@ -18,72 +20,78 @@ namespace MultiPartyWebRTC.Handler
             AttachWebSocketHandlers();
         }
 
+        public bool TryreceiveQueue(ref JObject data)
+        {
+            return messageQueue.TryDequeue(out data);
+        }
+
+        public void SendMessage(string nickname, object message)
+        {
+            Debug.Log($"{nickname} : Send Message...\n" +
+                      $"{message}");
+            string data = JsonConvert.SerializeObject(message);
+            websocket.Send(data);
+        }
+
+        public bool IsNullWebSocket()
+        {
+            return websocket == null;
+        }
+
         public void DisconnectWebSocket()
         {
-            if(webSocket == null)
+            if (websocket == null)
             {
                 return;
             }
             ClearAllWebSocket();
         }
 
-        public void SendMessage(object message)
-        {
-            Debug.Log(message);
-            string data = JsonConvert.SerializeObject(message);
-            webSocket.Send(data);
-        }
-
-        public bool IsNullWebSocket()
-        {
-            return webSocket == null;
-        }
-
         public void ClearAllWebSocket()
         {
-            if (webSocket == null)
+            if (websocket == null)
             {
                 return;
             }
 
-            webSocket.Close();
+            websocket.Close();
 
             DetachWebSocketHandlers();
 
-            webSocket = null;
+            websocket = null;
         }
 
         private void InitWebSocket(string url, string protocol)
         {
-            if(webSocket != null)
+            if(websocket != null)
             {
                 Debug.Log("This is a WebSocket that has already been created.");
                 return;
             }
 
-            webSocket = new WebSocket(url, protocol);
-            webSocket.Connect();
-            Debug.Log("WebSocket Message : WebSocket Connect - " + webSocket.IsAlive);
+            websocket = new WebSocket(url, protocol);
+            websocket.Connect();
+            Debug.Log("WebSocket Message : WebSocket Connect - " + websocket.IsAlive);
         }
 
 
         #region WebScoket ¿Ã∫•∆Æ
         private void AttachWebSocketHandlers()
         {
-            webSocket.OnOpen += WebSocketOnOpen;
-            webSocket.OnMessage += WebSocketOnMessage;
-            webSocket.OnError += WebSocketOnError;
-            webSocket.OnClose += WebSocketOnClose;
+            websocket.OnOpen += WebSocketOnOpen;
+            websocket.OnMessage += WebSocketOnMessage;
+            websocket.OnError += WebSocketOnError;
+            websocket.OnClose += WebSocketOnClose;
 
             Debug.Log($"Attach WebSocket events.");
         }
 
         private void DetachWebSocketHandlers()
         {
-            webSocket.OnOpen -= WebSocketOnOpen;
-            webSocket.OnMessage -= WebSocketOnMessage;
-            webSocket.OnError -= WebSocketOnError;
-            webSocket.OnClose -= WebSocketOnClose;
+            websocket.OnOpen -= WebSocketOnOpen;
+            websocket.OnMessage -= WebSocketOnMessage;
+            websocket.OnError -= WebSocketOnError;
+            websocket.OnClose -= WebSocketOnClose;
 
             Debug.Log($"Detach WebSocket events.");
         }
@@ -97,7 +105,7 @@ namespace MultiPartyWebRTC.Handler
         {
             Debug.Log("WebSocket Message: \n" + e.Data);
 
-            DataEvent.OnMessageReceiveEvent?.Invoke(JObject.Parse(e.Data));
+            messageQueue.Enqueue(JObject.Parse(e.Data));
         }
 
         private void WebSocketOnError(object sender, ErrorEventArgs e)

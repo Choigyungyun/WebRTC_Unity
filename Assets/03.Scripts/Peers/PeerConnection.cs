@@ -41,7 +41,6 @@ namespace MultiPartyWebRTC.Peer
         }
 
         protected abstract void SetUp();
-        protected abstract void Call();
 
         protected virtual void OnIceConnectionChange(RTCIceConnectionState state)
         {
@@ -79,8 +78,6 @@ namespace MultiPartyWebRTC.Peer
         protected virtual void OnIceCandidate(RTCIceCandidate candidate)
         {
             peerConnection.AddIceCandidate(candidate);
-
-            DataEvent.OccurringCandidateEvent?.Invoke(candidate.Candidate);
 
             Debug.Log($"{gameObject.name} ICE Candidate Received: {candidate.Candidate}");
         }

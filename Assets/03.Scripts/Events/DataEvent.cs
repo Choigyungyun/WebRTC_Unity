@@ -10,10 +10,13 @@ namespace MultiPartyWebRTC.Event
 {
     public class DataEvent
     {
-        public static Action<object> OnMessageResponseEvent;
+        public static Action<string, object> OnMessageResponseEvent;
         public static Action<JObject> OnMessageReceiveEvent;
 
-        public static Action<string, object> OfferSDPEvent;
-        public static Action<string> OccurringCandidateEvent;
+        public static Action<MessageType> OnRoomConfigureUpdateEvent;
+        public static Action<int, List<JObject>> OnRoomPublishersUpdateEvent;
+        public static Action<string> OnAwnserSDPReceiveEvent;
+        public static Action<string> OnOfferSDPReceiveEvent;
+        public static Action RemotePeerCompletedEvent;
     }
 }

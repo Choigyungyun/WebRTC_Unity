@@ -1,8 +1,8 @@
 using MultiPartyWebRTC.Event;
 using MultiPartyWebRTC.Handler;
 using MultiPartyWebRTC.Internal;
+using Newtonsoft.Json.Linq;
 using Unity.WebRTC;
-using UnityEditor;
 using UnityEngine;
 
 namespace MultiPartyWebRTC
@@ -15,9 +15,10 @@ namespace MultiPartyWebRTC
         [SerializeField] private float maxSessionTime = 0.0f;
 
         private bool updateSession = false;
+        private int completedRemotePeers = 0;
         private float time = 0.0f;
 
-        private WebSocketHandler webSocketHandler = new();
+        private WebSocketHandler websocketHandler = new();
         private MessageHandler messageHandler = new();
         private Coroutine updateCoroutine;
 
@@ -37,17 +38,9 @@ namespace MultiPartyWebRTC
 
         private void Update()
         {
-            if(updateSession == false)
-            {
-                return;
-            }
+            DequeueReceiveMessage();
 
-            time += Time.deltaTime;
-            if(time >= maxSessionTime)
-            {
-                messageHandler.KeepAliveSession();
-                time = 0.0f;
-            }
+            UpdateSessionTimer();
         }
 
         private void OnEnable()
@@ -61,8 +54,10 @@ namespace MultiPartyWebRTC
 
             StopUpdateWebRTC();
 
-            webSocketHandler.DisconnectWebSocket();
-        }
+            websocketHandler.DisconnectWebSocket();
+
+            completedRemotePeers = 0;
+    }
 
         #region 이벤트
         private void AddEvents()
@@ -75,13 +70,13 @@ namespace MultiPartyWebRTC
             UIEvent.ApplySettingClickEvent += ApplyWebSocketNetworkSetting;
 
             // Connect Panel Events
-            UIEvent.VideoRoomClickEvent += StartUpdateWebRTC;
-            UIEvent.VideoRoomClickEvent += SetVideoRoomPlugin;
+            UIEvent.VideoRoomClickEvent += StartVideoRoom;
 
             // Video Room Panel Evets
             UIEvent.HangUpVideoRoomEvent += StopUpdateWebRTC;
 
-            DataEvent.OnMessageResponseEvent += webSocketHandler.SendMessage;
+            DataEvent.OnMessageResponseEvent += websocketHandler.SendMessage;
+            DataEvent.RemotePeerCompletedEvent += OnRemotePeerCompleted;
         }
         private void RemoveEvents()
         {
@@ -93,29 +88,29 @@ namespace MultiPartyWebRTC
             UIEvent.ApplySettingClickEvent -= ApplyWebSocketNetworkSetting;
 
             // Connect Panel Events
-            UIEvent.VideoRoomClickEvent -= StartUpdateWebRTC;
-            UIEvent.VideoRoomClickEvent -= SetVideoRoomPlugin;
+            UIEvent.VideoRoomClickEvent -= StartVideoRoom;
 
             // Video Room Panel Events
             UIEvent.HangUpVideoRoomEvent -= StopUpdateWebRTC;
 
-            DataEvent.OnMessageResponseEvent -= webSocketHandler.SendMessage;
+            DataEvent.OnMessageResponseEvent -= websocketHandler.SendMessage;
+            DataEvent.RemotePeerCompletedEvent -= OnRemotePeerCompleted;
         }
         #endregion
 
         private void ApplyWebSocketNetworkSetting()
         {
-            if (webSocketHandler.IsNullWebSocket())
+            if (websocketHandler.IsNullWebSocket())
             {
                 return;
             }
 
-            webSocketHandler.ClearAllWebSocket();
+            websocketHandler.ClearAllWebSocket();
         }
 
         private void StartConnect()
         {
-            webSocketHandler.ConnectWebSocket();
+            websocketHandler.ConnectWebSocket();
 
             messageHandler.AddMessageEvent();
             messageHandler.CreateSession();
@@ -128,19 +123,21 @@ namespace MultiPartyWebRTC
             updateSession = false;
 
             messageHandler.RemoveMessageEvet();
-            webSocketHandler.DisconnectWebSocket();
+            websocketHandler.DisconnectWebSocket();
         }
 
-        // WebRTC 함수
-        private void StartUpdateWebRTC()
+        private void StartVideoRoom()
         {
-            if(updateCoroutine != null)
+            if (updateCoroutine != null)
             {
                 return;
             }
             updateCoroutine = StartCoroutine(WebRTC.Update());
             Debug.Log("WebRTC update start!");
+
+            messageHandler.SetPlugin(PluginType.VideoRoom);
         }
+
         private void StopUpdateWebRTC()
         {
             if(updateCoroutine == null)
@@ -152,10 +149,43 @@ namespace MultiPartyWebRTC
             Debug.Log("Stop WebRTC update.");
         }
 
-        // Message Handler 함수
-        private void SetVideoRoomPlugin()
+        private void DequeueReceiveMessage()
         {
-            messageHandler.SetPlugin(PluginType.VideoRoom);
+            JObject data = null;
+
+            if (websocketHandler.IsNullWebSocket() == true || !websocketHandler.TryreceiveQueue(ref data))
+            {
+                return;
+            }
+
+            DataEvent.OnMessageReceiveEvent?.Invoke(data);
+        }
+
+        private void UpdateSessionTimer()
+        {
+            if (updateSession == false)
+            {
+                return;
+            }
+
+            time += Time.deltaTime;
+            if (time >= maxSessionTime)
+            {
+                messageHandler.KeepAliveSession();
+                time = 0.0f;
+            }
+        }
+
+        private void OnRemotePeerCompleted()
+        {
+            completedRemotePeers++;
+
+            if(completedRemotePeers != JanusDatas.TotalRemotePeers)
+            {
+                return;
+            }
+
+            DataEvent.OnRoomConfigureUpdateEvent?.Invoke(MessageType.Configure);
         }
 
         #region 기본값 설정

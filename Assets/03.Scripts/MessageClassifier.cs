@@ -28,6 +28,8 @@ namespace MultiPartyWebRTC
                     return new PublisherMessageClassifier();
                 case MessageType.Join_Subscriber:
                     return new SubscriberMessageClassifier();
+                case MessageType.Start:
+                    return new StartMessageClassifier();
                 case MessageType.Configure:
                     return new ConfigureMessageClassifier();
                 case MessageType.Trickle:
@@ -69,10 +71,6 @@ namespace MultiPartyWebRTC
             {
                 handle_id = data["data"]["id"].ToString();
             }
-            else
-            {
-
-            }
 
             return handle_id != null ? ("handle_id",  handle_id) : (null, null);
         }
@@ -99,6 +97,14 @@ namespace MultiPartyWebRTC
                     {
                         Debug.Log($"Publisher data : {publisher}");
                     }
+
+                    DataEvent.OnRoomPublishersUpdateEvent?.Invoke(jArray.Count, publishers);
+                }
+                else
+                {
+                    Debug.Log("No publisher in this room");
+
+                    DataEvent.OnRoomConfigureUpdateEvent?.Invoke(MessageType.Configure);
                 }
             }
 
@@ -110,7 +116,40 @@ namespace MultiPartyWebRTC
     {
         public (string, object) ClassifierMessage(JObject data)
         {
-            throw new System.NotImplementedException();
+            string janus = data["janus"].ToString();
+            string sdp = string.Empty;
+
+            if(janus == "event")
+            {
+                sdp = data["jsep"]["sdp"].ToString();
+            }
+
+            if(sdp == "")
+            {
+                return (null, null);
+            }
+            else
+            {
+                return ("sdp", sdp);
+            }
+        }
+    }
+
+    public class StartMessageClassifier : IMessageClassifier
+    {
+        public (string, object) ClassifierMessage(JObject data)
+        {
+            string janus = data["janus"].ToString();
+            string started = string.Empty;
+
+            if (janus == "event")
+            {
+                if (data["plugindata"]["data"]["started"].ToString() == "ok")
+                {
+                    started = data["plugindata"]["data"]["started"].ToString();
+                }
+            }
+            return ("started", started);
         }
     }
 
@@ -118,7 +157,13 @@ namespace MultiPartyWebRTC
     {
         public (string, object) ClassifierMessage(JObject data)
         {
-            throw new System.NotImplementedException();
+            string janus = data["janus"].ToString();
+
+            if(janus == "event")
+            {
+                DataEvent.OnAwnserSDPReceiveEvent?.Invoke(data["jsep"]["sdp"].ToString());
+            }
+            return (null, null);
         }
     }
 
@@ -126,7 +171,7 @@ namespace MultiPartyWebRTC
     {
         public (string, object) ClassifierMessage(JObject data)
         {
-            throw new System.NotImplementedException();
+            return (null, null);
         }
     }
 }
