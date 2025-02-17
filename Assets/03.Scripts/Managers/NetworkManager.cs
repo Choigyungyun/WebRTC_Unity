@@ -73,7 +73,7 @@ namespace MultiPartyWebRTC
             UIEvent.VideoRoomClickEvent += StartVideoRoom;
 
             // Video Room Panel Evets
-            UIEvent.HangUpVideoRoomEvent += StopUpdateWebRTC;
+            UIEvent.HangUpVideoRoomEvent += StopConnect;
 
             DataEvent.OnMessageResponseEvent += websocketHandler.SendMessage;
             DataEvent.RemotePeerCompletedEvent += OnRemotePeerCompleted;
@@ -91,7 +91,7 @@ namespace MultiPartyWebRTC
             UIEvent.VideoRoomClickEvent -= StartVideoRoom;
 
             // Video Room Panel Events
-            UIEvent.HangUpVideoRoomEvent -= StopUpdateWebRTC;
+            UIEvent.HangUpVideoRoomEvent -= StopConnect;
 
             DataEvent.OnMessageResponseEvent -= websocketHandler.SendMessage;
             DataEvent.RemotePeerCompletedEvent -= OnRemotePeerCompleted;
@@ -121,9 +121,12 @@ namespace MultiPartyWebRTC
         private void StopConnect()
         {
             updateSession = false;
+            completedRemotePeers = 0;
 
             messageHandler.RemoveMessageEvet();
             websocketHandler.DisconnectWebSocket();
+
+            StopUpdateWebRTC();
         }
 
         private void StartVideoRoom()
@@ -185,6 +188,8 @@ namespace MultiPartyWebRTC
                 return;
             }
 
+            JanusDatas.TotalRemotePeers = 0;
+            completedRemotePeers = 1;
             DataEvent.OnRoomConfigureUpdateEvent?.Invoke(MessageType.Configure);
         }
 

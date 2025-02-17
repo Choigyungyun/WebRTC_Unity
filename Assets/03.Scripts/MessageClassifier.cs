@@ -34,6 +34,8 @@ namespace MultiPartyWebRTC
                     return new ConfigureMessageClassifier();
                 case MessageType.Trickle:
                     return new TrickleMessageClassifier();
+                case MessageType.Wait_Others:
+                    return new WaitOthersMessageClassifier();
                 default:
                     return null;
             }
@@ -97,13 +99,13 @@ namespace MultiPartyWebRTC
                     {
                         Debug.Log($"Publisher data : {publisher}");
                     }
-
+                    JanusDatas.TotalRemotePeers = jArray.Count;
                     DataEvent.OnRoomPublishersUpdateEvent?.Invoke(jArray.Count, publishers);
                 }
                 else
                 {
                     Debug.Log("No publisher in this room");
-
+                    JanusDatas.TotalRemotePeers = jArray.Count;
                     DataEvent.OnRoomConfigureUpdateEvent?.Invoke(MessageType.Configure);
                 }
             }
@@ -171,6 +173,44 @@ namespace MultiPartyWebRTC
     {
         public (string, object) ClassifierMessage(JObject data)
         {
+            return (null, null);
+        }
+    }
+
+    public class WaitOthersMessageClassifier : IMessageClassifier
+    {
+        public (string, object) ClassifierMessage(JObject data)
+        {
+            string janus = data["janus"].ToString();
+            string videoroom = data["plugindata"]?["data"]?["videoroom"]?.ToString() ?? string.Empty;
+
+            if (janus == "event" && videoroom == "event")
+            {
+                if (data["plugindata"]["data"].ToString().Contains("unpublished") || data["plugindata"]["data"].ToString().Contains("leaving"))
+                {
+                    DataEvent.LeavingRemotePeerEvent?.Invoke(data["plugindata"]["data"]["display"].ToString());
+                }
+                else
+                {
+                    JArray jArray = (JArray)data["plugindata"]["data"]["publishers"];
+
+                    Debug.Log($"New Users in the room\n" +
+                              $"Room number : {data["plugindata"]["data"]["room"]}\n" +
+                              $"New Users : {jArray.Count}");
+
+                    if (jArray.Count > 0)
+                    {
+                        List<JObject> publishers = jArray.ToObject<List<JObject>>();
+
+                        foreach (JObject publisher in publishers)
+                        {
+                            Debug.Log($"Publisher data : {publisher}");
+                        }
+                        DataEvent.OnRoomPublishersUpdateEvent?.Invoke(jArray.Count, publishers);
+                    }
+                }
+            }
+
             return (null, null);
         }
     }

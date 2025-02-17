@@ -18,5 +18,6 @@ namespace MultiPartyWebRTC.Event
         public static Action<string> OnAwnserSDPReceiveEvent;
         public static Action<string> OnOfferSDPReceiveEvent;
         public static Action RemotePeerCompletedEvent;
+        public static Action<string> LeavingRemotePeerEvent;
     }
 }

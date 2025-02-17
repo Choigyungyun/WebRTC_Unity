@@ -1,4 +1,5 @@
 using MultiPartyWebRTC.Event;
+using MultiPartyWebRTC.Peer;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
@@ -26,16 +27,8 @@ namespace MultiPartyWebRTC.Handler
         Configure,
         Completed,
         Trickle,
+        Wait_Others,
         KeepAlive
-    }
-
-    public enum ResponseType
-    {
-        None = 0,
-        Ack,
-        Event,
-        TimeOut,
-        HangUp
     }
 
     public class MessageHandler
@@ -92,22 +85,37 @@ namespace MultiPartyWebRTC.Handler
 
         private void ReceiveMessage(JObject data)
         {
-            if (messageType != MessageType.Create)
-            {
-                return;
-            }
-
             ClassifierMessage(data);
-            messageType = MessageType.None;
         }
 
         private void ClassifierMessage(JObject data)
         {
-            IMessageClassifier classifier = messageClassifier.GetClassifier(messageType);
-            (string key, object value) = classifier.ClassifierMessage(data);
+            IMessageClassifier classifier = null;
+            (string key, object value) = (string.Empty, string.Empty);
 
-            JanusDatas.Session_ID = value.ToString();
-            messageParameter["session_id"] = value;
+            switch (messageType)
+            {
+                case MessageType.None:
+                    break;
+                case MessageType.Create:
+                    classifier = messageClassifier.GetClassifier(messageType);
+                    (key, value) = classifier.ClassifierMessage(data);
+
+                    JanusDatas.Session_ID = value.ToString();
+                    messageParameter[key] = value;
+
+                    messageType = MessageType.Wait_Others;
+                    break;
+                case MessageType.Wait_Others:
+                    if (data["transaction"] == null)
+                    {
+                        classifier = messageClassifier.GetClassifier(messageType);
+                        (key, value) = classifier.ClassifierMessage(data);
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
     }
 }

@@ -33,6 +33,7 @@ namespace MultiPartyWebRTC
             microphoneToggle.onValueChanged.AddListener(ChangeMicrophoneState);
 
             DataEvent.OnRoomPublishersUpdateEvent += InstanceRemotePeer;
+            DataEvent.LeavingRemotePeerEvent += LeavingPeer;
 
             InstanceLocalPeer();
         }
@@ -45,6 +46,7 @@ namespace MultiPartyWebRTC
             microphoneToggle.onValueChanged.RemoveListener(ChangeMicrophoneState);
 
             DataEvent.OnRoomPublishersUpdateEvent -= InstanceRemotePeer;
+            DataEvent.LeavingRemotePeerEvent -= LeavingPeer;
 
             DestroyAllPeers();
         }
@@ -64,7 +66,16 @@ namespace MultiPartyWebRTC
 
                 remotePeer.SetRemotePeer(publisherDatas[peerIndex]);
             }
-            JanusDatas.TotalRemotePeers = totalPeers;
+        }
+
+        private void LeavingPeer(string nickname)
+        {
+            GameObject leaver = !peerContent.Find(nickname) ? null : peerContent.Find(nickname).gameObject;
+            if (leaver == null)
+            {
+                return;
+            }
+            Destroy(leaver);
         }
 
         private void DestroyAllPeers()
@@ -81,6 +92,7 @@ namespace MultiPartyWebRTC
 
         private void OnClickHangUpVideoRoom()
         {
+            DestroyAllPeers();
             UIEvent.HangUpVideoRoomEvent?.Invoke();
         }
 
